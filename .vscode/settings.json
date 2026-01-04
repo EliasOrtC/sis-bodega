@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "SIS-Bodega",
+            "database": "${workspaceFolder:inventario-app}/backend/local.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

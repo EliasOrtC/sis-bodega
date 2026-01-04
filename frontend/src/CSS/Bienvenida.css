@@ -1,0 +1,385 @@
+.tarjeta.bienvenida {
+  height: calc(550px + 12vh);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+}
+
+.scroll-stack-card {
+  transition: backdrop-filter 0.3s ease;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+}
+
+.scroll-stack-card:hover {
+  backdrop-filter: blur(10px);
+}
+
+
+.bienvenida .tarjeta-contenido {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  padding: 0 !important;
+}
+
+/* Tarjetas estilos */
+
+.div-contenedor-tarjetas {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+
+
+.img-tarjetasBV img {
+  width: 100%;
+  height: 100%;
+}
+
+
+.boton-tarjetasBV {
+  margin-top: 40px;
+  width: 80%;
+  padding: 10px;
+  font-size: 16px;
+  background-color: transparent;
+  box-shadow: none;
+  border: 2px solid rgba(255, 255, 255, 0.404);
+  transition: all 0.3s ease;
+}
+
+.boton-tarjetasBV:hover {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.texto-tarjetasBV {
+  max-width: 50%;
+  text-align: center;
+}
+
+.texto-tarjetasBV {
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+
+.scroll-stack-card:hover .texto-tarjetasBV,
+.scroll-stack-card:hover .img-tarjetasBV {
+  transform: scale(1.05);
+}
+
+.scroll-stack-card:hover .img-tarjetasBV {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+}
+
+.img-tarjetasBV {
+  width: 30%;
+  height: auto;
+  transform: scale(1);
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+
+
+
+
+/* Tarjeta Datos Estadisticos */
+
+.scroll-stack-card .tarjeta-contenido.DatosEstadisticos {
+  background: linear-gradient(to bottom,
+      #006699d8,
+      #004d80d8,
+      #003366d8,
+      #04044dd8,
+      #010012d8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.DatosEstadisticos {
+  background-position: 0% 100%;
+}
+
+.DatosEstadisticos .img-tarjetasBV {
+  transform: scale(0.75);
+}
+
+.scroll-stack-card:hover .DatosEstadisticos .img-tarjetasBV {
+  transform: scale(0.8);
+}
+
+
+/* Tarjeta de Módulo de Ventas */
+
+.scroll-stack-card .tarjeta-contenido.ModuloVentas {
+  background: linear-gradient(to bottom,
+      #000066d8,
+      #00004dd8,
+      #000033d8,
+      #00001ad8,
+      #000012d8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.ModuloVentas {
+  background-position: 0% 100%;
+}
+
+.ModuloVentas .img-tarjetasBV {
+  transform: scale(1.2);
+}
+
+.scroll-stack-card:hover .ModuloVentas .img-tarjetasBV {
+  transform: scale(1.25);
+}
+
+
+/* tarjeta de Módulo de Compras */
+
+.scroll-stack-card .tarjeta-contenido.ModuloCompras {
+  background: linear-gradient(to bottom,
+      /* color verde oscuro */
+      /* color purpura oscuro */
+      #660066d8,
+      #4d004dd8,
+      #330033d8,
+      #19001ad8,
+      #120012d8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.ModuloCompras {
+  background-position: 0% 100%;
+}
+
+/* tarjeta de Módulo de Clientes */
+.scroll-stack-card .tarjeta-contenido.ModuloClientes {
+  background: linear-gradient(to bottom,
+      #009933d8,
+      #00802ad8,
+      #00661ad8,
+      #004d0fd8,
+      #00120ad8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.ModuloClientes {
+  background-position: 0% 100%;
+}
+
+
+/* tarjeta de Módulo de Empleados */
+
+.scroll-stack-card .tarjeta-contenido.ModuloEmpleados {
+  background: linear-gradient(to bottom,
+      /* color naranja a un naranja muy oscuro */
+      #a54d01d8,
+      #a54301d8,
+      #a53300d8,
+      #a51a00d8,
+      #a50000d8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.ModuloEmpleados {
+  background-position: 0% 100%;
+}
+
+.ModuloEmpleados .img-tarjetasBV {
+  transform: scale(1.2);
+}
+
+.scroll-stack-card:hover .ModuloEmpleados .img-tarjetasBV {
+  transform: scale(1.25);
+}
+
+/* tarjeta de Módulo de Inventario */
+
+.scroll-stack-card .tarjeta-contenido.ModuloInventario {
+  background: linear-gradient(to bottom,
+      /* color rojo  */
+      #990000d8,
+      #800000d8,
+      #660000d8,
+      #4d0000d8,
+      #120000d8);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+  transition: background-position 4s ease;
+}
+
+.scroll-stack-card:hover .tarjeta-contenido.ModuloInventario {
+  background-position: 0% 100%;
+}
+
+.ModuloInventario .img-tarjetasBV {
+  transform: scale(1.4);
+}
+
+.scroll-stack-card:hover .ModuloInventario .img-tarjetasBV {
+  transform: scale(1.45);
+}
+
+/* Diseño de las tarjetas para movil */
+
+@media (max-width: 768px) {
+  .scroll-stack-card {
+    width: 100%;
+    height: 100%;
+  }
+
+  .tarjeta.bienvenida {
+    height: 100%;
+    width: 100%;
+  }
+
+  .tarjeta.bienvenida .tarjeta-contenido {
+    height: 80vh;
+    width: 100%;
+    transform: scale(1.01);
+  }
+
+  .div-contenedor-tarjetas {
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: space-evenly;
+  }
+
+  .texto-tarjetasBV {
+    max-width: 100%;
+  }
+
+  .div-contenedor-tarjetas .texto-tarjetasBV p {
+    display: none;
+  }
+
+  .div-contenedor-tarjetas .texto-tarjetasBV h3 {
+    font-size: 2rem;
+  }
+
+  .div-contenedor-tarjetas .texto-tarjetasBV h5 {
+    font-size: 1.3rem;
+  }
+
+  /* imagenes de las tarjetas */
+
+  /* Datos Estadisticos */
+  .DatosEstadisticos .img-tarjetasBV {
+    width: 20vw;
+    height: auto;
+    margin-bottom: 15px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .DatosEstadisticos .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .DatosEstadisticos .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+  /* Ventas */
+
+  .ModuloVentas .img-tarjetasBV {
+    width: 30vw;
+    height: auto;
+    margin-bottom: 15px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .ModuloVentas .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .ModuloVentas .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+  /* Compras */
+
+  .ModuloCompras .img-tarjetasBV {
+    width: 20vw;
+    height: auto;
+    margin-bottom: 25px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .ModuloCompras .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .ModuloCompras .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+  /* Clientes */
+
+  .ModuloClientes .img-tarjetasBV {
+    width: 20vw;
+    height: auto;
+    margin-bottom: 35px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .ModuloClientes .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .ModuloClientes .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+  /* Empleados */
+
+  .ModuloEmpleados .img-tarjetasBV {
+    width: 30vw;
+    height: auto;
+    margin-bottom: 35px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .ModuloEmpleados .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .ModuloEmpleados .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+  /* Inventario */
+  .ModuloInventario .img-tarjetasBV {
+    width: 50vw;
+    height: auto;
+    margin-bottom: 25px;
+    transform: scale(1);
+    transition: transform 0.5s ease, filter 0.5s ease;
+  }
+
+  .ModuloInventario .img-tarjetasBV {
+    transform: scale(1.7);
+  }
+
+  .scroll-stack-card:hover .ModuloInventario .img-tarjetasBV {
+    transform: scale(1.75);
+  }
+
+}
