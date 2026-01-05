@@ -1,0 +1,82 @@
+.graficos-root {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  padding-top: 50px;
+  padding-bottom: 50px;
+  overflow-x: hidden;
+  color: white;
+}
+
+.graficos-root::-webkit-scrollbar {
+  width: 0;
+}
+
+.graficos-container {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.dashboard-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(to right, #ffffff, #8a1010);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-left: 15px !important;
+}
+
+.chart-paper {
+  background: rgba(20, 20, 20, 0.8) !important;
+  /* Reducimos el blur o lo quitamos si es muy lento */
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 25px;
+  /* Quitamos transformaciones complejas que causan re-paints */
+  transition: box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+.chart-paper:hover {
+  box-shadow: 0 8px 32px 0 rgba(255, 61, 0, 0.15) !important;
+}
+
+.chart-title {
+  margin-bottom: 20px !important;
+  font-weight: 600 !important;
+  color: #c0c0c0;
+}
+
+.back-button {
+  background: rgba(138, 16, 16, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.back-button:hover {
+  background: #8a1010 !important;
+  transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividad extra */
+@media (max-width: 600px) {
+  .dashboard-title {
+    font-size: 2rem !important;
+  }
+
+  .chart-paper {
+    padding: 15px;
+  }
+}

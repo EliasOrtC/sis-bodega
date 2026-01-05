@@ -62,7 +62,7 @@ app.get('/clientes', async (req, res) => {
 app.get('/empleados', async (req, res) => {
   try {
     const result =
-    await db.execute('SELECT e.Id_Empleado, e.Nombres, e.Apellidos, e.EstadoCivil, e.Sexo, e.FechaDeNacimiento, e.FechaDeInicioContrato, e.FechaDeFinContrato, e.Ruc, e.NumCedula, e.NumInss, e.Estado, e.Sector, e.Id_Supervisor, p.Nombres AS SupervisorNombres, p.Apellidos AS SupervisorApellidos, e.SalarioBase FROM Empleados e LEFT JOIN Empleados p ON e.Id_Supervisor = p.Id_Empleado');
+      await db.execute('SELECT e.Id_Empleado, e.Nombres, e.Apellidos, e.EstadoCivil, e.Sexo, e.FechaDeNacimiento, e.FechaDeInicioContrato, e.FechaDeFinContrato, e.Ruc, e.NumCedula, e.NumInss, e.Estado, e.Sector, e.Id_Supervisor, p.Nombres AS SupervisorNombres, p.Apellidos AS SupervisorApellidos, e.SalarioBase FROM Empleados e LEFT JOIN Empleados p ON e.Id_Supervisor = p.Id_Empleado');
 
     const data = result.rows.map(row => ({
       id: row[0],
@@ -86,31 +86,31 @@ app.get('/empleados', async (req, res) => {
       salarioBase: row[16]
     }));
 
-/*     const result2 = await db.execute('SELECT * FROM Nomina');
-    const data2 = result2.rows.map(row => ({
-      id: row[0],
-      fechaActual: row[1],
-      id_empleado: row[2],
-      totalHorasLaboradas: row[3],
-      salarioBase: row[4],
-      antiguedad: row[5],
-      horasExtras: row[6],
-      comisionesPorVentas: row[7],
-      riesgoLaboral: row[8],
-      salarioBruto: row[9],
-      inssLaboral: row[10],
-      ir: row[11],
-      comedor: row[12],
-      anticipo: row[13],
-      cuotaSindical: row[14],
-      totalDeducciones: row[15],
-      salarioNeto: row[16],
-      inssPatronal: row[17],
-      inatec: row[18],
-      vacaciones: row[19],
-      aguinaldo: row[20],
-      indemnizacion: row[21]
-    })); */
+    /*     const result2 = await db.execute('SELECT * FROM Nomina');
+        const data2 = result2.rows.map(row => ({
+          id: row[0],
+          fechaActual: row[1],
+          id_empleado: row[2],
+          totalHorasLaboradas: row[3],
+          salarioBase: row[4],
+          antiguedad: row[5],
+          horasExtras: row[6],
+          comisionesPorVentas: row[7],
+          riesgoLaboral: row[8],
+          salarioBruto: row[9],
+          inssLaboral: row[10],
+          ir: row[11],
+          comedor: row[12],
+          anticipo: row[13],
+          cuotaSindical: row[14],
+          totalDeducciones: row[15],
+          salarioNeto: row[16],
+          inssPatronal: row[17],
+          inatec: row[18],
+          vacaciones: row[19],
+          aguinaldo: row[20],
+          indemnizacion: row[21]
+        })); */
     res.json(data);
   } catch (error) {
     console.error('Error fetching employees:', error);
@@ -137,17 +137,17 @@ app.get('/ventas', async (req, res) => {
       totalVenta: row[4]
     }));
 
-/*     const result2 = await db.execute('SELECT * FROM DetallesDeVentas');
-    const data2 = result2.rows.map(row => ({
-      id: row[0],
-      id_venta: row[1],
-      id_producto: row[2],
-      cantidadPaquetes: row[3],
-      cantidadUnidades: row[4],
-      precioUnitario: row[5],
-      subtotal: row[6],
-      fechaRegistro: row[7]
-    })); */
+    /*     const result2 = await db.execute('SELECT * FROM DetallesDeVentas');
+        const data2 = result2.rows.map(row => ({
+          id: row[0],
+          id_venta: row[1],
+          id_producto: row[2],
+          cantidadPaquetes: row[3],
+          cantidadUnidades: row[4],
+          precioUnitario: row[5],
+          subtotal: row[6],
+          fechaRegistro: row[7]
+        })); */
 
     res.json(data);
   } catch (error) {
@@ -210,6 +210,89 @@ app.get('/inventario', async (req, res) => {
   } catch (error) {
     console.error('Error fetching inventory:', error);
     res.status(500).json({ error: 'Error fetching inventory data' });
+  }
+});
+
+// --- Endpoints de Estadísticas ---
+
+app.get('/stats/ventas-mensuales', async (req, res) => {
+  try {
+    // Agrupar ventas por mes/año
+    const result = await db.execute(`
+      SELECT strftime('%Y-%m', FechaRegistro) as mes, SUM(TotalVenta) as total
+      FROM Ventas
+      GROUP BY mes
+      ORDER BY mes ASC
+    `);
+    const data = result.rows.map(row => ({
+      mes: row[0],
+      total: row[1]
+    }));
+    res.json(data);
+  } catch (error) {
+    console.error('Error en ventas mensuales:', error);
+    res.status(500).json({ error: 'Error al obtener ventas mensuales' });
+  }
+});
+
+app.get('/stats/productos-estrella', async (req, res) => {
+  try {
+    const result = await db.execute(`
+      SELECT i.Nombre, SUM(dv.CantidadPaquetes) as total_paquetes
+      FROM DetallesDeVentas dv
+      JOIN Inventario i ON dv.Id_Producto = i.Id_Producto
+      GROUP BY i.Nombre
+      ORDER BY total_paquetes DESC
+      LIMIT 5
+    `);
+    const data = result.rows.map(row => ({
+      nombre: row[0],
+      cantidad: row[1]
+    }));
+    res.json(data);
+  } catch (error) {
+    console.error('Error en productos estrella:', error);
+    res.status(500).json({ error: 'Error al obtener productos estrella' });
+  }
+});
+
+app.get('/stats/rendimiento-empleados', async (req, res) => {
+  try {
+    const result = await db.execute(`
+      SELECT e.Nombres || ' ' || e.Apellidos as empleado, SUM(v.TotalVenta) as total_ventas
+      FROM Ventas v
+      JOIN Empleados e ON v.Id_Empleado = e.Id_Empleado
+      GROUP BY empleado
+      ORDER BY total_ventas DESC
+    `);
+    const data = result.rows.map(row => ({
+      empleado: row[0],
+      total: row[1]
+    }));
+    res.json(data);
+  } catch (error) {
+    console.error('Error en rendimiento empleados:', error);
+    res.status(500).json({ error: 'Error al obtener rendimiento de empleados' });
+  }
+});
+
+app.get('/stats/niveles-stock', async (req, res) => {
+  try {
+    // Productos con stock bajo (ejm: menos de 10 paquetes) o distribución general
+    const result = await db.execute(`
+      SELECT Nombre, CantidadPaquetes
+      FROM Inventario
+      ORDER BY CantidadPaquetes ASC
+      LIMIT 20
+    `);
+    const data = result.rows.map(row => ({
+      nombre: row[0],
+      stock: row[1]
+    }));
+    res.json(data);
+  } catch (error) {
+    console.error('Error en niveles de stock:', error);
+    res.status(500).json({ error: 'Error al obtener niveles de stock' });
   }
 });
 

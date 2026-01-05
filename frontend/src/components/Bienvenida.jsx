@@ -1,6 +1,6 @@
 import React from 'react';
 import LaunchIcon from '@mui/icons-material/Launch';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Card, CardContent, Typography, Grid } from '@mui/material';
 import ScrollStack, { ScrollStackItem } from '../CSS/ScrollStack';
 import '../CSS/Bienvenida.css';
@@ -11,6 +11,7 @@ const modulesData = [
     subtitle: 'Control Estadístico del sistema',
     description: 'Estos gráficos están implementados para facilitar decisiones basadas en datos, mejorar la rentabilidad, reducir riesgos operativos y potenciar el crecimiento del negocio mediante visualizaciones claras e interactivas.',
     buttonText: 'Ver gráficos',
+    link: '/graficos',
     image: '/DE.webp',
     contentClass: 'DatosEstadisticos'
   },
@@ -63,10 +64,22 @@ const modulesData = [
 
 const BienvenidaCard = ({ data }) => {
   const { title, subtitle, description, buttonText, link, image, contentClass } = data;
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    if (link) {
+      console.log('Navegando a:', link);
+      navigate(link);
+    }
+  };
 
   return (
     <ScrollStackItem>
-      <Card sx={{ width: '100%', height: '100%' }} className='tarjeta bienvenida'>
+      <Card
+        sx={{ width: '100%', height: '100%', cursor: link ? 'pointer' : 'default' }}
+        className='tarjeta bienvenida'
+        onClick={handleCardClick}
+      >
         <CardContent className={`tarjeta-contenido ${contentClass}`}>
           <div className='div-contenedor-tarjetas'>
             <div className='texto-tarjetasBV'>
@@ -74,27 +87,15 @@ const BienvenidaCard = ({ data }) => {
               <Typography variant="h5" sx={{ mt: 2 }}>{subtitle}</Typography>
               <Typography variant="body1" sx={{ mt: 2 }}>{description}</Typography>
 
-              {link ? (
-                <Button
-                  className='boton-tarjetasBV'
-                  variant="contained"
-                  color="primary"
-                  component={Link}
-                  to={link}
-                  endIcon={<LaunchIcon />}
-                >
-                  {buttonText}
-                </Button>
-              ) : (
-                <Button
-                  className='boton-tarjetasBV'
-                  variant="contained"
-                  color="primary"
-                  endIcon={<LaunchIcon />}
-                >
-                  {buttonText}
-                </Button>
-              )}
+              <Button
+                className='boton-tarjetasBV'
+                variant="contained"
+                color="primary"
+                endIcon={<LaunchIcon />}
+                sx={{ pointerEvents: 'none' }} // El clic lo maneja la tarjeta
+              >
+                {buttonText}
+              </Button>
             </div>
             <div className='img-tarjetasBV'>
               <img src={image} alt="" />
@@ -107,6 +108,7 @@ const BienvenidaCard = ({ data }) => {
 };
 
 const Bienvenida = () => {
+  const navigate = useNavigate();
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
       <ScrollStack>

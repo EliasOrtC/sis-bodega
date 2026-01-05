@@ -17,6 +17,7 @@ const Clientes = lazy(() => import('./components/Clientes.jsx'));
 const Empleados = lazy(() => import('./components/Empleados.jsx'));
 const Compras = lazy(() => import('./components/Compras.jsx'));
 const Inventario = lazy(() => import('./components/Inventario.jsx'));
+const Graficos = lazy(() => import('./components/Graficos.jsx'));
 
 const theme = createTheme({
   palette: {
@@ -191,8 +192,8 @@ function AppContent() {
 
     <ClickSpark>
       <div className="App">
-        {isAuthenticated && location.pathname !== '/login' && <Navbar />}
-        {isAuthenticated && location.pathname !== '/login' && <FloatingMenu onLogout={handleLogout} />}
+        {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <Navbar />}
+        {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <FloatingMenu onLogout={handleLogout} />}
         <Suspense fallback={<div>Cargando...</div>}>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -204,6 +205,7 @@ function AppContent() {
                 <Route path="/empleados" element={<Empleados />} />
                 <Route path="/compras" element={<Compras />} />
                 <Route path="/inventario" element={<Inventario />} />
+                <Route path="/graficos" element={<Graficos />} />
               </>
             )}
           </Routes>
