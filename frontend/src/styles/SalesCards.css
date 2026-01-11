@@ -1,0 +1,129 @@
+.sales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+    width: 100%;
+}
+
+.sale-card {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-radius: 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+    color: #1a1a1a !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.css-v7kwkj {
+    max-height: none !important;
+    height: auto !important;
+    padding-right: 0 !important;
+    overflow-y: hidden !important;
+}
+
+.sale-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.559) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.sale-card.selected {
+    background: rgba(255, 255, 255, 0.741) !important;
+    border-color: #9d0000 !important;
+    box-shadow: 0 0 20px rgba(157, 0, 0, 0.15);
+}
+
+.sale-card.selected::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(to bottom, #9d0000, #640c0c);
+}
+
+.sale-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.sale-date {
+    font-size: 0.8rem;
+    color: #2a2a2a;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.sale-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #9d0000, #640c0c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.sale-info-row {
+    margin-bottom: 8px;
+}
+
+.sale-info-label {
+    font-size: 0.75rem;
+    color: #303030;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sale-info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.sale-total-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.sale-total-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #000000;
+}
+
+.sale-total-amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #9d0000, #1a1a1a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -2,22 +2,23 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
-import Navbar from './components/Navbar.jsx';
-import FloatingMenu from './components/FloatingMenu.jsx';
-import { SelectionProvider, useSelection } from './CSS/SelectionContext.jsx';
-import ClickSpark from './CSS/ClickSpark.jsx';
-import { socket } from './socket';
-import './CSS/App.css';
-import './CSS/Modales.css';
+import Navbar from './components/layout/Navbar.jsx';
+import FloatingMenu from './components/layout/FloatingMenu.jsx';
+import { SelectionProvider, useSelection } from './context/SelectionContext.jsx';
+import ClickSpark from './components/common/ClickSpark.jsx';
+import { socket } from './utils/socket';
+import './styles/App.css';
+import './styles/Modales.css';
 
-const Login = lazy(() => import('./components/Login.jsx'));
-const Bienvenida = lazy(() => import('./components/Bienvenida.jsx'));
-const Ventas = lazy(() => import('./components/Ventas.jsx'));
-const Clientes = lazy(() => import('./components/Clientes.jsx'));
-const Empleados = lazy(() => import('./components/Empleados.jsx'));
-const Compras = lazy(() => import('./components/Compras.jsx'));
-const Inventario = lazy(() => import('./components/Inventario.jsx'));
-const Graficos = lazy(() => import('./components/Graficos.jsx'));
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Bienvenida = lazy(() => import('./pages/Bienvenida.jsx'));
+const Ventas = lazy(() => import('./pages/Ventas.jsx'));
+const Clientes = lazy(() => import('./pages/Clientes.jsx'));
+const Empleados = lazy(() => import('./pages/Empleados.jsx'));
+const Compras = lazy(() => import('./pages/Compras.jsx'));
+const Inventario = lazy(() => import('./pages/Inventario.jsx'));
+const Graficos = lazy(() => import('./pages/Graficos.jsx'));
+const Configuracion = lazy(() => import('./pages/Configuracion.jsx'));
 
 const theme = createTheme({
   palette: {
@@ -33,15 +34,16 @@ const theme = createTheme({
 
 function App() {
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to server');
-    });
+    const onConnect = () => console.log('Connected to server');
+    const onDisconnect = () => console.log('Disconnected from server');
 
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-    });
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
-    // No desconectar el socket aquí, ya que es global y debe persistir
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+    };
   }, []);
 
   return (
@@ -145,7 +147,7 @@ function AppContent() {
     const rememberedPassword = getCookie('rememberedPassword');
     if (rememberedUsername && rememberedPassword) {
       // Intentar login automático
-      fetch('http://192.168.1.235:5001/login', {
+      fetch('http://192.168.1.100:5001/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,6 +208,7 @@ function AppContent() {
                 <Route path="/compras" element={<Compras />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/graficos" element={<Graficos />} />
+                <Route path="/configuracion" element={<Configuracion />} />
               </>
             )}
           </Routes>

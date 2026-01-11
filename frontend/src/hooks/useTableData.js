@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
-import { socket } from '../socket';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { socket } from '../utils/socket';
+import { API_BASE_URL } from '../utils/config';
 
-const BASE_URL = 'http://192.168.1.235:5001';
+const BASE_URL = API_BASE_URL;
 
 const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [lastCount, setLastCount] = useState(0);
     const [tableClass, setTableClass] = useState('table-initial');
+
+    // Refs for state that shouldn't trigger fetchData re-creation
+    const lastCountRef = useRef(0);
+    const timeoutRef = useRef(null);
+    const isMounted = useRef(true);
 
     const [windowHeight] = useState(window.innerHeight);
     const vhToPx = windowHeight / 100;
@@ -17,54 +22,77 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
     const maxHeightValue = tableClass === 'table-initial' ? '100px' : `${57 + (rowHeight * data.length)}px`;
     const timeTransition = ((1 / (data.length || 100)) * 10) + 1;
 
-
     const fetchData = useCallback(async () => {
+        const startTime = Date.now();
         try {
             const response = await fetch(`${BASE_URL}/${endpoint}`);
             if (!response.ok) throw new Error(`Error al obtener ${endpoint}`);
             const json = await response.json();
             const dataArray = Array.isArray(json) ? json : [];
 
-            setData(dataArray);
-            if (dataArray.length !== lastCount) {
-                setLastCount(dataArray.length);
+            if (isMounted.current) {
+                setData(dataArray);
+                lastCountRef.current = dataArray.length;
+                setError(null);
             }
-            setError(null);
         } catch (err) {
-            setError(err.message);
+            if (isMounted.current) setError(err.message);
         } finally {
-            setLoading(false);
+            if (isMounted.current) {
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, 800 - elapsedTime);
+
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => {
+                    if (isMounted.current) setLoading(false);
+                }, remainingTime);
+            }
         }
-    }, [endpoint, lastCount]);
+    }, [endpoint]);
 
     useEffect(() => {
+        isMounted.current = true;
         fetchData();
 
+        const handleSocketUpdate = () => {
+            fetchData();
+        };
+
         if (socketEvent) {
-            socket.on(socketEvent, fetchData);
+            socket.on(socketEvent, handleSocketUpdate);
         }
 
-        const pollingInterval = setInterval(fetchData, 5000);
+        // Reduced polling frequency if socket is active, or use it as fallback
+        const pollingInterval = setInterval(fetchData, 15000);
 
         return () => {
-            if (socketEvent) socket.off(socketEvent);
+            isMounted.current = false;
+            if (socketEvent) {
+                socket.off(socketEvent, handleSocketUpdate);
+            }
             clearInterval(pollingInterval);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
     }, [fetchData, socketEvent]);
 
-    // Handle initial table transition only
+    // Handle initial table transition
     useEffect(() => {
         if (data.length > 0 && tableClass === 'table-initial') {
-            const timer = setTimeout(() => setTableClass('table-final'), 0); // Reduced delay
+            const timer = setTimeout(() => {
+                if (isMounted.current) setTableClass('table-final');
+            }, 50);
             return () => clearTimeout(timer);
         }
     }, [data.length, tableClass]);
 
     // Sync selection
     useEffect(() => {
-        if (selectedItem) {
+        if (selectedItem && data.length > 0) {
             const updatedItem = data.find(item => item.id === selectedItem.id);
             if (updatedItem) {
+                // Use a more efficient check if possible, or only update if references differ
+                // but since data is new array from fetch, references will always differ.
+                // We'll keep the stringify but at least narrowed down by ID.
                 if (JSON.stringify(updatedItem) !== JSON.stringify(selectedItem)) {
                     setSelectedItem(updatedItem);
                 }

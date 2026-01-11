@@ -1,0 +1,195 @@
+.configuracion-container {
+    --config-bg: #0a0a0aff;
+    --config-sidebar-bg: #111111ff;
+    --config-card-bg: rgba(20, 20, 20, 0.8);
+    --config-text-primary: #e0e0e0ff;
+    --config-text-secondary: #aaaaaaff;
+    --config-accent: #fff;
+    --config-sidebar-hover: #1a1a1aff;
+    --config-sidebar-active: rgb(49 49 49 / 77%);
+    --config-border: #222222ff;
+}
+
+.configuracion-container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--config-bg);
+    padding-top: 64px;
+    width: 100vw;
+    color: var(--config-text-primary);
+}
+
+.config-sidebar {
+    width: 250px;
+    background: var(--config-sidebar-bg);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    border-right: 1px solid var(--config-border);
+}
+
+.config-sidebar-item {
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--config-text-secondary);
+    border-left: 4px solid transparent;
+    border-radius: 10px;
+}
+
+.config-sidebar-item svg {
+    color: var(--config-text-primary);
+}
+
+.config-sidebar-item:hover {
+    background-color: var(--config-sidebar-hover);
+    color: var(--config-accent);
+}
+
+.config-sidebar-item.active {
+    background-color: var(--config-sidebar-active);
+    color: var(--config-accent);
+    border-left-color: var(--config-accent);
+    font-weight: 600;
+}
+
+.config-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: radial-gradient(circle at top left, #1a0505, transparent);
+}
+
+.config-content::-webkit-scrollbar {
+    width: 0px;
+}
+
+.config-card {
+    background: var(--config-card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    min-height: 80vh;
+    border: 1px solid var(--config-border);
+}
+
+.config-card .MuiPaper-root {
+    background: transparent !important;
+    color: var(--config-text-primary) !important;
+}
+
+.config-title {
+    margin-bottom: 30px;
+    color: var(--config-text-primary);
+    font-family: 'Georgia', serif;
+    font-size: 2rem;
+    border-bottom: 1px solid var(--config-border);
+    padding-bottom: 15px;
+}
+
+/* History Table Styles */
+.history-table-container {
+    background: transparent !important;
+    border-radius: 12px;
+    overflow-x: auto !important;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.config-content .history-table th,
+.config-content .history-table td,
+.config-content .history-table .MuiTableCell-root {
+    background: #181818e8 !important;
+    transition: background-color 0.3s ease !important;
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: none !important;
+    color: var(--config-text-secondary) !important;
+}
+
+.config-content .history-table th,
+.config-content .history-table .MuiTableCell-head {
+    transition: background-color 0.3s ease !important;
+    background-color: rgb(39 38 38) !important;
+    color: var(--config-accent) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--config-accent) !important;
+}
+
+.config-content .history-table tr:hover td {
+    background-color: rgba(90, 90, 90, 0.377) !important;
+}
+
+.config-content .history-table td {
+    color: var(--config-text-secondary);
+}
+
+.config-content .action-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.config-content .badge-insert {
+    background: rgba(76, 175, 80, 0.1);
+    color: #81c784;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.config-content .badge-update {
+    background: rgba(255, 152, 0, 0.1);
+    color: #ffb74d;
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.config-content .badge-delete {
+    background: rgba(244, 67, 54, 0.1);
+    color: #e57373;
+    border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+@media (max-width: 768px) {
+    .configuracion-container {
+        flex-direction: column;
+        padding-top: 56px;
+    }
+
+    .config-sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 5px 0;
+        border-right: none;
+        border-bottom: 1px solid var(--config-border);
+    }
+
+    .config-sidebar-item {
+        padding: 12px 20px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        white-space: nowrap;
+    }
+
+    .config-sidebar-item.active {
+        border-bottom-color: var(--config-accent);
+    }
+
+    .config-content {
+        padding: 15px;
+    }
+}
