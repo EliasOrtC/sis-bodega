@@ -34,7 +34,7 @@
 }
 
 .sale-card.selected {
-    background: rgba(255, 255, 255, 0.741) !important;
+    background: rgb(232, 232, 232) !important;
     border-color: #9d0000 !important;
     box-shadow: 0 0 20px rgba(157, 0, 0, 0.15);
 }

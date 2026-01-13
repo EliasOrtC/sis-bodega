@@ -26,10 +26,34 @@ const Sales = () => {
     timeTransition
   } = useTableData('ventas', 'VentasActualizadas', selectedItem, setSelectedItem);
 
-  // Estados para el filtro de fechas
+  // Helper para obtener el rango por defecto inmediatamente
+  const getDefaultDates = () => {
+    const today = new Date();
+    // Inicio: Primer día del mes anterior
+    const firstDayPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const startStr = `${firstDayPrevMonth.getFullYear()}-${String(firstDayPrevMonth.getMonth() + 1).padStart(2, '0')}-01`;
+
+    // Fin: Hoy
+    const endStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    return { startStr, endStr };
+  };
+
+  const { startStr: defStart, endStr: defEnd } = getDefaultDates();
+
+  // Limites de fechas
+  const getBounds = () => {
+    const now = new Date();
+    const min = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+    const max = new Date(now.getFullYear() + 3, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+    return { min, max };
+  };
+  const { min: minDate, max: maxDate } = getBounds();
+
+  // Estados para el filtro de fechas (Inicializados con valores calculados)
   const [filterType, setFilterType] = useState('nEmp'); // 'single' | 'range'
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(defStart);
+  const [endDate, setEndDate] = useState(defEnd);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Estados para el modal de detalles
@@ -40,28 +64,7 @@ const Sales = () => {
 
   // Estados para paginación
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 8;
-
-  // Efecto para establecer el rango por defecto
-  useEffect(() => {
-    if (sales.length > 0 && !startDate && !endDate) {
-      const today = new Date();
-      // Obtener el primer día del mes anterior
-      const firstDayPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-
-      // Formatear manualmente a YYYY-MM-DD para evitar desfases de zona horaria
-      const year = firstDayPrevMonth.getFullYear();
-      const month = String(firstDayPrevMonth.getMonth() + 1).padStart(2, '0');
-      const day = '01';
-      const formattedStartDate = `${year}-${month}-${day}`;
-
-      setStartDate(formattedStartDate);
-
-      const now = new Date();
-      const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      setEndDate(localToday);
-    }
-  }, [sales, startDate, endDate]);
+  const ITEMS_PER_PAGE = 12;
 
   // Filtrar ventas de forma eficiente (Memoizado)
   const filteredSales = React.useMemo(() => {
@@ -126,6 +129,7 @@ const Sales = () => {
 
   const handleShowDetails = async (e, sale) => {
     e.stopPropagation(); // Evitar que se seleccione la card al hacer clic en el botón
+    e.currentTarget.blur();
     setSelectedSale(sale);
     setDetailsOpen(true);
     setLoadingDetails(true);
@@ -144,7 +148,7 @@ const Sales = () => {
 
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Card sx={{ width: '100%', background: 'transparent' }} elevation={0}>
           <CardContent className='tarjeta-contenido'>
             <Box sx={{ mb: 2 }}>
@@ -187,6 +191,7 @@ const Sales = () => {
               </Box>
 
               <TextField
+                id="filter-type-select"
                 select
                 label="Filtrar por"
                 value={filterType}
@@ -208,13 +213,19 @@ const Sales = () => {
               </TextField>
 
               <TextField
+                id="filter-start-date"
                 type="date"
                 label={filterType === 'single' ? "Fecha" : "Desde"}
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val < minDate || val > maxDate) return;
+                  setStartDate(val);
+                }}
                 InputLabelProps={{ shrink: true, sx: { color: '#555' } }}
                 size="small"
                 InputProps={{
+                  inputProps: { min: minDate, max: maxDate },
                   sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
                 }}
               />
@@ -223,13 +234,19 @@ const Sales = () => {
                 <>
                   <Typography variant="body2" sx={{ color: '#1a1a1a', fontWeight: 'bold' }}>→</Typography>
                   <TextField
+                    id="filter-end-date"
                     type="date"
                     label="Hasta"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val < minDate || val > maxDate) return;
+                      setEndDate(val);
+                    }}
                     InputLabelProps={{ shrink: true, sx: { color: '#555' } }}
                     size="small"
                     InputProps={{
+                      inputProps: { min: minDate, max: maxDate },
                       sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
                     }}
                   />
@@ -238,6 +255,7 @@ const Sales = () => {
 
               {['nEmp', 'nCli', 'nProd'].includes(filterType) && (
                 <TextField
+                  id="filter-search-query"
                   label={
                     filterType === 'nEmp' ? "Buscar Empleado..." :
                       filterType === 'nCli' ? "Buscar Cliente..." :
@@ -366,15 +384,11 @@ const Sales = () => {
       <Dialog
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: '20px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-          }
-        }}
+        maxWidth="md"
+        PaperProps={{ className: 'custom-modal-paper' }}
+        slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+        disableRestoreFocus
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Box>
@@ -403,23 +417,23 @@ const Sales = () => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Producto</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>Tipo Paq.</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>Cant. Paq</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>Cant. Uni</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700 }}>Precio</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700 }}>Subtotal</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Producto</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Tipo Paq.</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Cant. Paq</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Cant. Uni</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Precio</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)' }}>Subtotal</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {saleDetails.map((item, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{item.producto?.nombre || `Prod #${item.id_producto}`}</TableCell>
-                      <TableCell align="center">{item.producto?.tipoPaquete || '-'}</TableCell>
-                      <TableCell align="center">{item.cantidadPaquetes}</TableCell>
-                      <TableCell align="center">{item.cantidadUnidades}</TableCell>
-                      <TableCell align="right">C$ {Number(item.precioUnitario).toFixed(2)}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600 }}>C$ {Number(item.subtotal).toFixed(2)}</TableCell>
+                      <TableCell sx={{ fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>{item.producto?.nombre || `Prod #${item.id_producto}`}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>{item.producto?.tipoPaquete || '-'}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>{item.cantidadPaquetes}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>{item.cantidadUnidades}</TableCell>
+                      <TableCell align="right" sx={{ fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>C$ {Number(item.precioUnitario).toFixed(2)}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}>C$ {Number(item.subtotal).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                   {saleDetails.length === 0 && (
@@ -437,11 +451,11 @@ const Sales = () => {
           {selectedSale && !loadingDetails && (
             <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
-                <Typography variant="caption" display="block" sx={{ color: '#666' }}>Cliente: {selectedSale.cliente.nombres} {selectedSale.cliente.apellidos}</Typography>
-                <Typography variant="caption" display="block" sx={{ color: '#666' }}>Atendido por: {selectedSale.empleado.nombres} {selectedSale.empleado.apellidos}</Typography>
+                <Typography variant="caption" display="block" sx={{ color: '#666', fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}><b>Cliente:</b><br /> {selectedSale.cliente.nombres} {selectedSale.cliente.apellidos}</Typography>
+                <Typography variant="caption" display="block" sx={{ color: '#666', fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)' }}><b>Atendido por:</b><br /> {selectedSale.empleado.nombres} {selectedSale.empleado.apellidos}</Typography>
               </Box>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#9d0000' }}>
-                Total: C$ {Number(selectedSale.totalVenta).toLocaleString('es-NI', { minimumFractionDigits: 2 })}
+              <Typography variant="h5" sx={{ fontSize: 'clamp(1cqw, 4cqw, 25px)', fontWeight: 800, color: '#9d0000' }}>
+                Total:<br />C$ {Number(selectedSale.totalVenta).toLocaleString('es-NI', { minimumFractionDigits: 2 })}
               </Typography>
             </Box>
           )}

@@ -281,6 +281,42 @@ if (USE_LOCAL_DB) {
       END;
     `);
 
+    // 3. Trigger para ACTUALIZAR inventario al editar cantidades o productos (UPDATE en DetallesDeVentas)
+    await db.execute(`DROP TRIGGER IF EXISTS trg_update_stock_update`);
+    await db.execute(`
+      CREATE TRIGGER trg_update_stock_update
+      AFTER UPDATE ON DetallesDeVentas
+      BEGIN
+        -- 1. Devolver el stock del producto anterior (OLD)
+        UPDATE Inventario
+        SET
+          CantidadPaquetes = (
+            (CantidadPaquetes * TipoPaquete + CantidadUnidades) + (OLD.CantidadPaquetes * TipoPaquete + OLD.CantidadUnidades)
+          ) / TipoPaquete,
+          CantidadUnidades = (
+            (CantidadPaquetes * TipoPaquete + CantidadUnidades) + (OLD.CantidadPaquetes * TipoPaquete + OLD.CantidadUnidades)
+          ) % TipoPaquete,
+          Inventario = ROUND((CAST(
+            ((CantidadPaquetes * TipoPaquete + CantidadUnidades) + (OLD.CantidadPaquetes * TipoPaquete + OLD.CantidadUnidades))
+          AS REAL) / TipoPaquete),2)
+        WHERE Id_Producto = OLD.Id_Producto;
+
+        -- 2. Restar el stock del nuevo producto/cantidad (NEW)
+        UPDATE Inventario
+        SET
+          CantidadPaquetes = (
+            (CantidadPaquetes * TipoPaquete + CantidadUnidades) - (NEW.CantidadPaquetes * TipoPaquete + NEW.CantidadUnidades)
+          ) / TipoPaquete,
+          CantidadUnidades = (
+            (CantidadPaquetes * TipoPaquete + CantidadUnidades) - (NEW.CantidadPaquetes * TipoPaquete + NEW.CantidadUnidades)
+          ) % TipoPaquete,
+          Inventario = ROUND((CAST(
+            ((CantidadPaquetes * TipoPaquete + CantidadUnidades) - (NEW.CantidadPaquetes * TipoPaquete + NEW.CantidadUnidades))
+          AS REAL) / TipoPaquete),2)
+        WHERE Id_Producto = NEW.Id_Producto;
+      END;
+    `);
+
     console.log('Triggers de inventario configurados exitosamente');
   } catch (error) {
     console.error('Error al crear las tablas/triggers:', error);

@@ -238,23 +238,24 @@ exports.updateDetallesVenta = async (req, res) => {
             }
         }
 
-        // Construir descripción del log
-        const logParts = [];
+        // Registro detallado en el historial
         if (productosAgregados.length > 0) {
-            logParts.push(`${productosAgregados.length} agregado(s): ${productosAgregados.join(', ')}`);
+            await logAction(userId, username, 'DetallesDeVentas', 'INSERT',
+                `${productosAgregados.length} agregado(s) a la venta ID ${id_venta}: ${productosAgregados.join(', ')}`);
         }
         if (productosActualizados.length > 0) {
-            logParts.push(`${productosActualizados.length} actualizado(s): ${productosActualizados.join(', ')}`);
+            await logAction(userId, username, 'DetallesDeVentas', 'UPDATE',
+                `${productosActualizados.length} actualizado(s) en la venta ID ${id_venta}: ${productosActualizados.join(', ')}`);
         }
         if (productosEliminados.length > 0) {
-            logParts.push(`${productosEliminados.length} eliminado(s): ${productosEliminados.join(', ')}`);
+            await logAction(userId, username, 'DetallesDeVentas', 'DELETE',
+                `${productosEliminados.length} eliminado(s) de la venta ID ${id_venta}: ${productosEliminados.join(', ')}`);
         }
 
-        const description = logParts.length > 0
-            ? `Detalles de venta ID ${id_venta} actualizados - ${logParts.join(' | ')}`
-            : `Detalles de venta ID ${id_venta} sin cambios`;
+        if (productosAgregados.length === 0 && productosActualizados.length === 0 && productosEliminados.length === 0) {
+            await logAction(userId, username, 'DetallesDeVentas', 'UPDATE', `Detalles de venta ID ${id_venta} sin cambios`);
+        }
 
-        await logAction(userId, username, 'DetallesDeVentas', 'UPDATE', description);
         scanner.notificarDetallesVentas();
         res.json({
             message: 'Detalles de venta actualizados correctamente',

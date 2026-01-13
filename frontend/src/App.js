@@ -5,7 +5,7 @@ import { CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, D
 import Navbar from './components/layout/Navbar.jsx';
 import FloatingMenu from './components/layout/FloatingMenu.jsx';
 import { SelectionProvider, useSelection } from './context/SelectionContext.jsx';
-import ClickSpark from './components/common/ClickSpark.jsx';
+
 import { socket } from './utils/socket';
 import './styles/App.css';
 import './styles/Modales.css';
@@ -192,7 +192,7 @@ function AppContent() {
 
   return (
 
-    <ClickSpark>
+    <>
       <div className="App">
         {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <Navbar />}
         {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <FloatingMenu onLogout={handleLogout} />}
@@ -218,6 +218,8 @@ function AppContent() {
           onClose={() => setShowLogoutModal(false)}
           PaperProps={{ className: 'custom-modal-paper' }}
           slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+          disableRestoreFocus
+          disableEnforceFocus
         >
           <DialogTitle className="modal-title">Confirmar Cierre de Sesión</DialogTitle>
           <DialogContent className="modal-content-styled">
@@ -231,7 +233,7 @@ function AppContent() {
           </DialogActions>
         </Dialog>
       </div>
-    </ClickSpark>
+    </>
   );
 }
 

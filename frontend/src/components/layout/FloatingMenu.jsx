@@ -33,7 +33,7 @@ const FloatingMenu = ({ onLogout }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   // Consolidated for data fetching
-  const { empleados, clientes, supervisores, proveedores, productos } = useFloatingMenuData(location.pathname);
+  const { empleados, clientes, supervisores, proveedores, productos, refreshData } = useFloatingMenuData(location.pathname);
   const catalogs = { empleados, clientes, supervisores, proveedores, productos };
 
   const formRef = useRef(null);
@@ -54,11 +54,13 @@ const FloatingMenu = ({ onLogout }) => {
     navigate('/configuracion');
   };
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    if (e) e.currentTarget.blur();
     setModalOpen(true);
   };
 
-  const handleEdit = async () => {
+  const handleEdit = async (e) => {
+    if (e) e.currentTarget.blur();
     if (selectedItem) {
       setEditModalOpen(true);
     }
@@ -245,6 +247,7 @@ const FloatingMenu = ({ onLogout }) => {
         setSuccessMessage(isEdit ? 'Registro actualizado correctamente' : 'Registro agregado correctamente');
         setModalType('success');
         setShowSuccessModal(true);
+        refreshData(); // Recargar el inventario (y otros catálogos) para reflejar los cambios
         setTimeout(() => setShowSuccessModal(false), 2000);
 
       } else {
@@ -419,6 +422,8 @@ const FloatingMenu = ({ onLogout }) => {
         TransitionComponent={Transition}
         transitionDuration={350}
         slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+        disableRestoreFocus
+        disableEnforceFocus
       >
         <DialogTitle className="modal-title">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -455,6 +460,8 @@ const FloatingMenu = ({ onLogout }) => {
         TransitionComponent={Transition}
         transitionDuration={350}
         slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+        disableRestoreFocus
+        disableEnforceFocus
       >
         <DialogTitle className="modal-title">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

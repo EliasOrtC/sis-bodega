@@ -21,27 +21,27 @@ const useFloatingMenuData = (path) => {
         }
     }, []);
 
-    useEffect(() => {
-        const loadRequiredData = async () => {
-            setLoading(true);
-            const fetches = [];
+    const loadRequiredData = useCallback(async () => {
+        setLoading(true);
+        const fetches = [];
 
-            if (path === '/ventas') {
-                fetches.push(fetchData('empleados', setEmpleados));
-                fetches.push(fetchData('clientes', setClientes));
-                fetches.push(fetchData('inventario', setProductos));
-            } else if (path === '/empleados') {
-                fetches.push(fetchData('empleados', setSupervisores));
-            } else if (path === '/compras') {
-                fetches.push(fetchData('proveedores', setProveedores));
-            }
+        if (path === '/ventas') {
+            fetches.push(fetchData('empleados', setEmpleados));
+            fetches.push(fetchData('clientes', setClientes));
+            fetches.push(fetchData('inventario', setProductos));
+        } else if (path === '/empleados') {
+            fetches.push(fetchData('empleados', setSupervisores));
+        } else if (path === '/compras') {
+            fetches.push(fetchData('proveedores', setProveedores));
+        }
 
-            await Promise.all(fetches);
-            setLoading(false);
-        };
-
-        loadRequiredData();
+        await Promise.all(fetches);
+        setLoading(false);
     }, [path, fetchData]);
+
+    useEffect(() => {
+        loadRequiredData();
+    }, [loadRequiredData]);
 
     return {
         empleados,
@@ -50,7 +50,7 @@ const useFloatingMenuData = (path) => {
         proveedores,
         productos,
         loadingData: loading,
-        refreshData: () => { } // Placeholder for potential refresh logic
+        refreshData: loadRequiredData
     };
 };
 

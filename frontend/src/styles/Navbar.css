@@ -1,0 +1,159 @@
+.mobile-menu-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(207, 207, 207, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1200;
+    padding-top: 65px;
+    /* Altura del navbar */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-100%);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu-panel.open {
+    transform: translateY(0);
+}
+
+.mobile-menu-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px 20px;
+    gap: 15px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    /* Mejora el scroll en iOS */
+}
+
+.mobile-menu-content::-webkit-scrollbar {
+    height: 4px;
+}
+
+.mobile-menu-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.hamburger-button {
+    display: none !important;
+}
+
+.css-a98hr5-MuiButtonBase-root-MuiButton-root {
+    /* botones del navbar */
+    font-size: 0.79rem !important;
+}
+
+.css-3ujdr3-MuiGrid-root {
+    /* navbar y contenido (1)*/
+    padding: 0 !important;
+    width: 100% !important;
+    height: calc(100% - 64px) !important;
+    justify-content: center !important;
+    margin-top: 0 !important;
+    position: absolute;
+    top: 64px;
+}
+
+.div-bienvenida .bienvenida-link {
+    color: inherit;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s, background-position 0.8s ease, transform 0.5s ease;
+
+    /* Gradiente vertical: rojo oscuro → gris */
+    background: linear-gradient(to bottom,
+            #000000 30%,
+            #a00d0d 100%);
+
+    background-size: 200% 250%;
+    background-position: top;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transform: scale(1);
+}
+
+.div-bienvenida:hover .bienvenida-link {
+    background-position: bottom;
+    transform: scale(1.05);
+}
+
+.animacion-video {
+    width: 100%;
+    height: 100%;
+    max-height: 9.8vh;
+    object-fit: contain;
+    opacity: 1;
+    position: absolute;
+    top: -.2vh;
+    left: -3px;
+    transform: scale(1.25);
+}
+
+.animacion-container {
+    width: 85px;
+    height: 100%;
+    max-height: 10vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.animacion-img {
+    transform: scale(1.11);
+    width: 100%;
+    height: 100%;
+    object-fit: scale-down;
+    position: absolute;
+    top: 0vh;
+    left: 24.4%;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity .4s 2s ease;
+}
+
+@media (max-width: 768px) {
+    .hamburger-button {
+        display: inline-flex !important;
+        color: black !important;
+        margin-right: 10px;
+    }
+
+    .nav-buttons-desktop {
+        display: none !important;
+    }
+
+    .mobile-menu-panel {
+        padding-top: 64px;
+        /* Altura ajustada del navbar en movil */
+    }
+
+    .div-bienvenida .bienvenida-link {
+        font-size: 1rem;
+    }
+
+    .css-a98hr5-MuiButtonBase-root-MuiButton-root {
+        /* botones del navbar */
+        font-size: 0.7rem !important;
+    }
+
+    .animacion-container {
+        max-height: 11.1vh;
+    }
+
+    .animacion-video {
+        max-height: 10vh;
+        top: .2vh;
+        left: -6px;
+    }
+}

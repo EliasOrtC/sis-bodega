@@ -19,7 +19,7 @@ const Inventario = () => {
 
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Card sx={{ width: '100%' }} className='tarjeta'>
           <CardContent className='tarjeta-contenido'>
             <Typography variant="h4">Inventario</Typography>

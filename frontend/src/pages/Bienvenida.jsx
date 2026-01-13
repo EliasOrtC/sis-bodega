@@ -118,7 +118,7 @@ const Bienvenida = () => {
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
       <ScrollStack>
-        <Grid item xs={12}>
+        <Grid size={12}>
           {modulesData.map((data, index) => (
             <BienvenidaCard key={index} data={{ ...data, index }} />
           ))}
