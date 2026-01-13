@@ -18,8 +18,9 @@ exports.getEmpleados = async (req, res) => {
 
 exports.addEmpleado = async (req, res) => {
     try {
-        const { nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, supervisor, salarioBase, userId, username } = req.body;
-        await db.execute('INSERT INTO Empleados (Nombres, Apellidos, EstadoCivil, Sexo, FechaDeNacimiento, FechaDeInicioContrato, FechaDeFinContrato, RUC, NumCedula, NumInss, Estado, Sector, Supervisor, SalarioBase) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, supervisor, salarioBase]);
+        const { nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, supervisor, salarioBase } = req.body;
+        const { id: userId, username } = req.user;
+        await db.execute('INSERT INTO Empleados (Nombres, Apellidos, EstadoCivil, Sexo, FechaDeNacimiento, FechaDeInicioContrato, FechaDeFinContrato, RUC, NumCedula, NumInss, Estado, Sector, Id_Supervisor, SalarioBase) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, supervisor, salarioBase]);
         await logAction(userId, username, 'Empleados', 'INSERT', `Empleado agregado: ${nombres} ${apellidos}`);
         scanner.notificarEmpleados();
         res.status(201).json({ message: 'Empleado agregado correctamente' });
@@ -32,7 +33,8 @@ exports.addEmpleado = async (req, res) => {
 exports.updateEmpleado = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, Supervisor, salarioBase, userId, username } = req.body;
+        const { nombres, apellidos, estadoCivil, sexo, fechaDeNacimiento, fechaDeInicioContrato, fechaDeFinContrato, ruc, numCedula, numInss, estado, sector, Supervisor, salarioBase } = req.body;
+        const { id: userId, username } = req.user;
 
         // Comparación de cambios
         const oldResult = await db.execute('SELECT * FROM Empleados WHERE Id_Empleado = ?', [id]);

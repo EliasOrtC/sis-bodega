@@ -28,7 +28,8 @@ exports.getVentas = async (req, res) => {
 
 exports.addVenta = async (req, res) => {
     try {
-        const { id_empleado, id_cliente, fechaRegistro, totalVenta, userId, username } = req.body;
+        const { id_empleado, id_cliente, fechaRegistro, totalVenta } = req.body;
+        const { id: userId, username } = req.user;
         const result = await db.execute('INSERT INTO Ventas (Id_Empleado, Id_Cliente, FechaRegistro, TotalVenta) VALUES (?, ?, ?, ?)', [id_empleado, id_cliente, fechaRegistro, totalVenta]);
         const ventaIdResult = await db.execute('SELECT last_insert_rowid() as id');
         const ventaId = ventaIdResult.rows[0][0];
@@ -44,7 +45,8 @@ exports.addVenta = async (req, res) => {
 exports.updateVenta = async (req, res) => {
     try {
         const { id } = req.params;
-        const { id_empleado, id_cliente, fechaRegistro, totalVenta, userId, username } = req.body;
+        const { id_empleado, id_cliente, fechaRegistro, totalVenta } = req.body;
+        const { id: userId, username } = req.user;
 
         // Comparación de cambios con nombres de empleado y cliente
         const oldResult = await db.execute(
@@ -140,7 +142,8 @@ exports.getDetallesVenta = async (req, res) => {
 
 exports.addDetalleBatch = async (req, res) => {
     try {
-        const { id_venta, detalles, userId, username } = req.body;
+        const { id_venta, detalles } = req.body;
+        const { id: userId, username } = req.user;
         const productNames = [];
 
         for (const detalle of detalles) {
@@ -168,7 +171,8 @@ exports.addDetalleBatch = async (req, res) => {
 
 exports.updateDetallesVenta = async (req, res) => {
     try {
-        const { id_venta, detalles, userId, username } = req.body;
+        const { id_venta, detalles } = req.body;
+        const { id: userId, username } = req.user;
 
         // Obtener detalles existentes
         const existingResult = await db.execute(
@@ -274,7 +278,7 @@ exports.updateDetallesVenta = async (req, res) => {
 exports.deleteDetallesVenta = async (req, res) => {
     try {
         const { id_venta } = req.params;
-        const { userId, username } = req.body;
+        const { id: userId, username } = req.user;
 
         // Obtener nombres de productos antes de eliminar
         const detailsResult = await db.execute(

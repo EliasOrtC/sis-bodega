@@ -95,7 +95,7 @@ function AppContent() {
     localStorage.removeItem('user');
     sessionStorage.removeItem('user');
     deleteCookie('rememberedUsername');
-    deleteCookie('rememberedPassword');
+    // No borramos la contraseña porque ya no se guarda en cookie
     setIsAuthenticated(false);
     setShowLogoutModal(false);
     navigate('/login');
@@ -131,49 +131,25 @@ function AppContent() {
   }, [navigate]);
 
   useEffect(() => {
-    const user = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (user) {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (userStr) {
       try {
-        JSON.parse(user);
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        return;
+        const user = JSON.parse(userStr);
+        if (user && user.token) {
+          setIsAuthenticated(true);
+        } else {
+          // Token no válido o no existe
+          setIsAuthenticated(false);
+        }
       } catch {
         localStorage.removeItem('user');
         sessionStorage.removeItem('user');
+        setIsAuthenticated(false);
       }
-    }
-    const rememberedUsername = getCookie('rememberedUsername');
-    const rememberedPassword = getCookie('rememberedPassword');
-    if (rememberedUsername && rememberedPassword) {
-      // Intentar login automático
-      fetch('http://192.168.1.100:5001/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: rememberedUsername, password: rememberedPassword }),
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.user) {
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setIsAuthenticated(true);
-          } else {
-            // Falló, borrar cookies
-            deleteCookie('rememberedUsername');
-            deleteCookie('rememberedPassword');
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          deleteCookie('rememberedUsername');
-          deleteCookie('rememberedPassword');
-          setIsLoading(false);
-        });
     } else {
-      setIsLoading(false);
+      setIsAuthenticated(false);
     }
+    setIsLoading(false);
   }, []); // Solo al montar
 
   useEffect(() => {

@@ -17,7 +17,8 @@ exports.getInventario = async (req, res) => {
 
 exports.addInventario = async (req, res) => {
     try {
-        const { nombre, tipoPaquete, inventario, cantidadUnidades, cantidadPaquetes, precioVenta_Paq, precioCompra_Paq, userId, username } = req.body;
+        const { nombre, tipoPaquete, inventario, cantidadUnidades, cantidadPaquetes, precioVenta_Paq, precioCompra_Paq } = req.body;
+        const { id: userId, username } = req.user;
         await db.execute('INSERT INTO Inventario (Nombre, TipoPaquete, Inventario, CantidadUnidades, CantidadPaquetes, PrecioVenta_Paq, PrecioCompra_Paq) VALUES (?, ?, ?, ?, ?, ?, ?)', [nombre, tipoPaquete, inventario, cantidadUnidades, cantidadPaquetes, precioVenta_Paq, precioCompra_Paq]);
         await logAction(userId, username, 'Inventario', 'INSERT', `Producto agregado: ${nombre}`);
         scanner.notificarInventario();
@@ -31,7 +32,8 @@ exports.addInventario = async (req, res) => {
 exports.updateInventario = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, tipoPaquete, inventario, cantidadUnidades, cantidadPaquetes, precioVenta_Paq, precioCompra_Paq, userId, username } = req.body;
+        const { nombre, tipoPaquete, inventario, cantidadUnidades, cantidadPaquetes, precioVenta_Paq, precioCompra_Paq } = req.body;
+        const { id: userId, username } = req.user;
 
         // Comparación de cambios
         const oldResult = await db.execute('SELECT * FROM Inventario WHERE Id_Producto = ?', [id]);

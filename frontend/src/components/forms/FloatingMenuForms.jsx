@@ -87,9 +87,23 @@ export const VentasForm = memo(({
                 className="floating-cart-button"
                 sx={{ ml: 2 }}
             >
-                <Badge badgeContent={cartItems.length} color="error" overlap="circular">
+                {cartItems && cartItems.length > 0 ? (
+                    <Badge
+                        badgeContent={cartItems.length}
+                        color="error"
+                        overlap="circular"
+                        sx={{
+                            '& .MuiBadge-badge': {
+                                backgroundColor: '#d32f2f',
+                                color: 'white'
+                            }
+                        }}
+                    >
+                        <ShoppingCartIcon sx={{ fontSize: '1.6rem' }} />
+                    </Badge>
+                ) : (
                     <ShoppingCartIcon sx={{ fontSize: '1.6rem' }} />
-                </Badge>
+                )}
             </IconButton>
 
             <Popover

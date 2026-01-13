@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const comprasController = require('../controllers/comprasController');
+const auth = require('../middleware/authMiddleware');
 
-router.get('/', comprasController.getCompras);
-router.post('/', comprasController.addCompra);
-router.put('/:id', comprasController.updateCompra);
+router.get('/', auth, comprasController.getCompras);
+router.post('/', auth, comprasController.addCompra);
+router.put('/:id', auth, comprasController.updateCompra);
 
 module.exports = router;

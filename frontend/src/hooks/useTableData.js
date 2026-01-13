@@ -25,7 +25,15 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
     const fetchData = useCallback(async () => {
         const startTime = Date.now();
         try {
-            const response = await fetch(`${BASE_URL}/${endpoint}`);
+            // Obtener el token del almacenamiento local o de sesión
+            const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+            const token = user?.token || localStorage.getItem('token') || sessionStorage.getItem('token');
+
+            const response = await fetch(`${BASE_URL}/${endpoint}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) throw new Error(`Error al obtener ${endpoint}`);
             const json = await response.json();
             const dataArray = Array.isArray(json) ? json : [];

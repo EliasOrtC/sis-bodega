@@ -24,7 +24,8 @@ exports.getClientes = async (req, res) => {
 
 exports.addCliente = async (req, res) => {
     try {
-        const { nombres, apellidos, correo, telefono, fechaRegistro, numCedula, direccion, userId, username } = req.body;
+        const { nombres, apellidos, correo, telefono, fechaRegistro, numCedula, direccion } = req.body;
+        const { id: userId, username } = req.user;
         await db.execute('INSERT INTO Clientes (Nombres, Apellidos, Correo, Telefono, FechaRegistro, NumCedula, Direccion) VALUES (?, ?, ?, ?, ?, ?, ?)', [nombres, apellidos, correo, telefono, fechaRegistro, numCedula, direccion]);
         await logAction(userId, username, 'Clientes', 'INSERT', `Cliente agregado: ${nombres} ${apellidos}`);
         scanner.notificarClientes();
@@ -38,7 +39,8 @@ exports.addCliente = async (req, res) => {
 exports.updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombres, apellidos, correo, telefono, fechaRegistro, numCedula, direccion, userId, username } = req.body;
+        const { nombres, apellidos, correo, telefono, fechaRegistro, numCedula, direccion } = req.body;
+        const { id: userId, username } = req.user;
 
         // Obtener datos viejos para comparar
         const oldResult = await db.execute('SELECT * FROM Clientes WHERE Id_Cliente = ?', [id]);

@@ -17,7 +17,8 @@ exports.getCompras = async (req, res) => {
 
 exports.addCompra = async (req, res) => {
     try {
-        const { fechaDeCompra, id_proveedor, totalCompra, userId, username } = req.body;
+        const { fechaDeCompra, id_proveedor, totalCompra } = req.body;
+        const { id: userId, username } = req.user;
         await db.execute('INSERT INTO Compras (FechaDeCompra, Id_Proveedor, TotalCompra) VALUES (?, ?, ?)', [fechaDeCompra, id_proveedor, totalCompra]);
         await logAction(userId, username, 'Compras', 'INSERT', `Compra agregada por un total de ${totalCompra}`);
         scanner.notificarCompras();
@@ -31,7 +32,8 @@ exports.addCompra = async (req, res) => {
 exports.updateCompra = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fechaDeCompra, id_proveedor, totalCompra, userId, username } = req.body;
+        const { fechaDeCompra, id_proveedor, totalCompra } = req.body;
+        const { id: userId, username } = req.user;
 
         // Comparación de cambios
         const oldResult = await db.execute('SELECT * FROM Compras WHERE Id_Compra = ?', [id]);

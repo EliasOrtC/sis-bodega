@@ -178,11 +178,15 @@ const FloatingMenu = ({ onLogout }) => {
           return;
       }
 
+      const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+      const token = user?.token;
+
       const method = isEdit ? 'PUT' : 'POST';
       const response = await fetch(endpoint, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data),
       });
@@ -196,7 +200,10 @@ const FloatingMenu = ({ onLogout }) => {
             // Actualización eficiente: comparar y actualizar solo lo necesario
             const updateResponse = await fetch(`${API_BASE_URL}/detalles-ventas/update`, {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
               body: JSON.stringify({
                 id_venta: id_venta,
                 userId: currentUser.id,
@@ -219,7 +226,10 @@ const FloatingMenu = ({ onLogout }) => {
             // Agregar detalles nuevos (solo para ventas nuevas)
             const detallesResponse = await fetch(`${API_BASE_URL}/detalles-ventas/batch`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
               body: JSON.stringify({
                 id_venta: id_venta,
                 userId: currentUser.id,

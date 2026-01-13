@@ -42,13 +42,19 @@ const ModalFormManager = forwardRef(({
 
             // Restore selections based on ID if catalogs are available
             if (location.pathname === '/ventas') {
-                if (initialData.empleado && catalogs.empleados) {
-                    const emp = catalogs.empleados.find(e => e.id === initialData.empleado.id);
-                    setSelectedEmpleado(emp || null);
+                if (initialData.empleado) {
+                    formattedData.id_empleado = initialData.empleado.id || initialData.id_empleado;
+                    if (catalogs.empleados) {
+                        const emp = catalogs.empleados.find(e => e.id === formattedData.id_empleado);
+                        setSelectedEmpleado(emp || null);
+                    }
                 }
-                if (initialData.cliente && catalogs.clientes) {
-                    const cli = catalogs.clientes.find(c => c.id === initialData.cliente.id);
-                    setSelectedCliente(cli || null);
+                if (initialData.cliente) {
+                    formattedData.id_cliente = initialData.cliente.id || initialData.id_cliente;
+                    if (catalogs.clientes) {
+                        const cli = catalogs.clientes.find(c => c.id === formattedData.id_cliente);
+                        setSelectedCliente(cli || null);
+                    }
                 }
 
                 // Fetch details for sales edit
@@ -94,6 +100,16 @@ const ModalFormManager = forwardRef(({
 
     // --- Cart Logic ---
     const handleAddToCart = useCallback(() => {
+        // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS (Cabecera) ---
+        if (location.pathname === '/ventas') {
+            const hasEmp = selectedEmpleado || formData.id_empleado || (formData.empleado && formData.empleado.id);
+            const hasCli = selectedCliente || formData.id_cliente || (formData.cliente && formData.cliente.id);
+
+            if (!hasEmp) return { error: 'Selecciona un Empleado' };
+            if (!hasCli) return { error: 'Selecciona un Cliente' };
+            if (!formData.fechaRegistro) return { error: 'Selecciona una Fecha de Registro' };
+        }
+
         if (!selectedProducto) {
             return { error: 'Selecciona un producto' };
         }
@@ -210,7 +226,7 @@ const ModalFormManager = forwardRef(({
         setCantidadPaquetes(0);
         setCantidadUnidades(0);
         return { success: true };
-    }, [selectedProducto, cantidadPaquetes, cantidadUnidades, cartItems, originalCartItems, editingIndex]);
+    }, [selectedProducto, cantidadPaquetes, cantidadUnidades, cartItems, originalCartItems, editingIndex, location.pathname, selectedEmpleado, selectedCliente, formData]);
 
     const handleEditFromCart = useCallback((index) => {
         const item = cartItems[index];
@@ -299,10 +315,6 @@ const ModalFormManager = forwardRef(({
             const validationError = validateForm(submissionData);
             if (validationError) {
                 setError(validationError);
-                // Propagar el error o mostrarlo localmente si es necesario
-                // Pero generalmente el componente padre maneja el guardado. 
-                // Para que el padre sepa que falló, podemos retornar false o lanzar algo.
-                alert(validationError); // Simple alert para feedback inmediato
                 return false;
             }
 

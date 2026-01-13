@@ -1,9 +1,10 @@
+require('dotenv').config();
 const { createClient } = require('@libsql/client');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 
 // Cambia esta variable a true para usar base de datos local (offline), false para Turso (online)
-const USE_LOCAL_DB = true;
+const USE_LOCAL_DB = process.env.NODE_ENV === 'production' ? false : true;
 
 let db;
 
@@ -41,8 +42,8 @@ if (USE_LOCAL_DB) {
 } else {
   console.log('conectado a la base de datos en Turso');
   db = createClient({
-    url: 'libsql://sisbodega-eliasortc.aws-us-east-1.turso.io',
-    authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjU1NTQwMTQsImlkIjoiODY2Yjg4MzctMzM1OS00YjFkLWI5YzMtZjYwNThjYzgzYjIxIiwicmlkIjoiYjI1YjAwYTUtMDFlMS00MDhiLWE1MGUtOWM0NjYzMzdkOTQ1In0.ytOIJEChd3DUY57dLy0STRqjnYrhAAdrLM-dX5LzZL1GArN_LjYG57j4AmogZUtOSBDvCfovt6OqM6IJowXdDg'
+    url: process.env.TURSO_URL,
+    authToken: process.env.TURSO_TOKEN
   });
 }
 

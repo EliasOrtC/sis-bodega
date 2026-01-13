@@ -13,6 +13,7 @@ import { useSelection } from '../context/SelectionContext.jsx';
 import useTableData from '../hooks/useTableData';
 import TableStatus from '../components/common/TableStatus.jsx';
 import { API_BASE_URL } from '../utils/config';
+import SaleCard from '../components/ventas/SaleCard.jsx';
 import '../styles/SalesCards.css';
 
 const Sales = () => {
@@ -69,36 +70,35 @@ const Sales = () => {
   // Filtrar ventas de forma eficiente (Memoizado)
   const filteredSales = React.useMemo(() => {
     if (!Array.isArray(sales)) return [];
-    if (!startDate) return sales;
+
+    // Si no hay filtros activos y no hay búsqueda, devolvemos todo (o según lógica de negocio)
+    // Pero aquí parece que siempre hay un rango por defecto, así que procedemos.
 
     const startStr = startDate;
     const endStr = endDate || new Date().toISOString().split('T')[0];
+    const query = searchQuery ? searchQuery.toLowerCase() : '';
 
     return sales.filter(sale => {
-      // Obtener el string YYYY-MM-DD en hora LOCAL para que coincida con lo que se muestra
-      const dateObj = new Date(sale.fechaRegistro);
-      const localYear = dateObj.getFullYear();
-      const localMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const localDay = String(dateObj.getDate()).padStart(2, '0');
-      const saleDateStr = `${localYear}-${localMonth}-${localDay}`;
+      // Optimizamos: si el backend ya envía la fecha formateada o si podemos 
+      // extraer el string sin crear un objeto Date completo sería ideal.
+      // Como sale.fechaRegistro parece venir como "YYYY-MM-DD...", podemos hacer split.
+      const saleDateStr = sale.fechaRegistro.split('T')[0].split(' ')[0];
 
       const isInDateRange = filterType === 'single'
         ? saleDateStr === startStr
         : (saleDateStr >= startStr && saleDateStr <= endStr);
 
       if (!isInDateRange) return false;
+      if (!query) return true;
 
       // Filtros de búsqueda por texto
-      if (!searchQuery) return true;
-
-      const query = searchQuery.toLowerCase();
       if (filterType === 'nEmp') {
-        const empName = `${sale.employee?.nombres || sale.empleado.nombres} ${sale.employee?.apellidos || sale.empleado.apellidos}`.toLowerCase();
-        return empName.includes(query);
+        const emp = sale.employee || sale.empleado;
+        return `${emp?.nombres} ${emp?.apellidos}`.toLowerCase().includes(query);
       }
       if (filterType === 'nCli') {
-        const cliName = `${sale.customer?.nombres || sale.cliente.nombres} ${sale.customer?.apellidos || sale.cliente.apellidos}`.toLowerCase();
-        return cliName.includes(query);
+        const cli = sale.customer || sale.cliente;
+        return `${cli?.nombres} ${cli?.apellidos}`.toLowerCase().includes(query);
       }
       if (filterType === 'nProd') {
         return (sale.productos || '').toLowerCase().includes(query);
@@ -127,14 +127,26 @@ const Sales = () => {
     }
   };
 
-  const handleShowDetails = async (e, sale) => {
+  const handleSelectSale = React.useCallback((sale) => {
+    setSelectedItem(prev => prev?.id === sale.id ? null : sale);
+  }, [setSelectedItem]);
+
+  const handleShowDetails = React.useCallback(async (e, sale) => {
     e.stopPropagation(); // Evitar que se seleccione la card al hacer clic en el botón
-    e.currentTarget.blur();
+    if (e.currentTarget) e.currentTarget.blur();
+
     setSelectedSale(sale);
     setDetailsOpen(true);
     setLoadingDetails(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/detalles-ventas/${sale.id}`);
+      const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+      const token = user?.token;
+
+      const response = await fetch(`${API_BASE_URL}/detalles-ventas/${sale.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setSaleDetails(data);
@@ -144,7 +156,7 @@ const Sales = () => {
     } finally {
       setLoadingDetails(false);
     }
-  };
+  }, []);
 
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
@@ -289,60 +301,14 @@ const Sales = () => {
               }}
             >
               {paginatedSales.map((sale, index) => (
-                <Card
+                <SaleCard
                   key={sale.id}
-                  className={`sale-card ${selectedItem?.id === sale.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedItem(selectedItem?.id === sale.id ? null : sale)}
-                  style={{
-                    animation: `cardEntrance 0.4s ease forwards ${index * 0.05}s`,
-                    opacity: 0
-                  }}
-                >
-                  <CardContent sx={{ p: '24px !important' }}>
-                    <Box className="sale-card-header">
-                      <Typography className="sale-date">
-                        {(() => {
-                          const [year, month, day] = sale.fechaRegistro.split('T')[0].split(' ')[0].split('-');
-                          return `${day}/${month}/${year}`;
-                        })()}
-                      </Typography>
-                      <Box
-                        className="sale-icon-container"
-                        sx={{ cursor: 'pointer', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }}
-                        onClick={(e) => handleShowDetails(e, sale)}
-                      >
-                        <ReceiptLongIcon sx={{ color: 'white' }} />
-                      </Box>
-                    </Box>
-
-                    <Box className="sale-info-row" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                      <PersonIcon sx={{ color: 'black', fontSize: '1.2rem' }} />
-                      <Box>
-                        <Typography className="sale-info-label">Cliente</Typography>
-                        <Typography className="sale-info-value">
-                          {sale.cliente.nombres} {sale.cliente.apellidos}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Box className="sale-info-row" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                      <BadgeIcon sx={{ color: 'black', fontSize: '1.2rem' }} />
-                      <Box>
-                        <Typography className="sale-info-label">Atendido por</Typography>
-                        <Typography className="sale-info-value" sx={{ fontSize: '0.9rem' }}>
-                          {sale.empleado.nombres} {sale.empleado.apellidos}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Box className="sale-total-section">
-                      <Typography className="sale-total-label">Total Venta</Typography>
-                      <Typography className="sale-total-amount">
-                        C$ {Number(sale.totalVenta).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
+                  sale={sale}
+                  index={index}
+                  isSelected={selectedItem?.id === sale.id}
+                  onSelect={handleSelectSale}
+                  onShowDetails={handleShowDetails}
+                />
               ))}
             </Box>
 

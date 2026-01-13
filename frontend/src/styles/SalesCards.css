@@ -11,7 +11,14 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 0, 0, 0.05) !important;
     border-radius: 20px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.3s ease,
+        background-color 0.3s ease,
+        border-color 0.3s ease !important;
+    will-change: transform, opacity;
+    opacity: 0;
+    animation: cardEntrance 0.4s ease forwards;
+    /* Para la animación de entrada */
     cursor: default;
     position: relative;
     overflow: hidden;
@@ -27,10 +34,12 @@
 }
 
 .sale-card:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.559) !important;
+    transform: translateY(-5px) translateZ(0);
+    /* translateZ(0) fuerza capa GPU */
+    background: rgba(255, 255, 255, 0.85) !important;
+    /* Menos blur, más opacidad para suavizar */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border-color: rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(157, 0, 0, 0.2) !important;
 }
 
 .sale-card.selected {
@@ -119,11 +128,11 @@
 @keyframes cardEntrance {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) translateZ(0);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Grid, Paper, Typography, Box, IconButton, Tooltip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../utils/config';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     BarChart, Bar, Cell, PieChart, Pie, Legend
@@ -17,14 +18,24 @@ const Graficos = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const host = window.location.hostname;
-            const API_BASE = `http://${host}:5001/stats`;
+            const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+            const token = user?.token;
+
+            // Usar la URL centralizada de la API
+            const API_BASE = `${import.meta.env?.VITE_API_URL || API_BASE_URL}/stats`;
+
+            const fetchOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+
             try {
                 const [vMensuales, pEstrella, rEmpleados, nStock] = await Promise.all([
-                    fetch(`${API_BASE}/ventas-mensuales`).then(res => res.json()),
-                    fetch(`${API_BASE}/productos-estrella`).then(res => res.json()),
-                    fetch(`${API_BASE}/rendimiento-empleados`).then(res => res.json()),
-                    fetch(`${API_BASE}/niveles-stock`).then(res => res.json())
+                    fetch(`${API_BASE}/ventas-mensuales`, fetchOptions).then(res => res.json()),
+                    fetch(`${API_BASE}/productos-estrella`, fetchOptions).then(res => res.json()),
+                    fetch(`${API_BASE}/rendimiento-empleados`, fetchOptions).then(res => res.json()),
+                    fetch(`${API_BASE}/niveles-stock`, fetchOptions).then(res => res.json())
                 ]);
                 setVentasMensuales(vMensuales);
                 setProductosEstrella(pEstrella);

@@ -14,6 +14,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff, LockOutlined, PersonOutline } from '@mui/icons-material';
+import { API_BASE_URL } from '../utils/config';
 import '../styles/Login.css';
 
 const Login = () => {
@@ -54,7 +55,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://192.168.1.100:5001/login', {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,12 +64,15 @@ const Login = () => {
       });
       const data = await response.json();
       if (response.ok) {
+        // Guardamos el objeto completo que incluye el token
+        const userData = { ...data.user, token: data.token };
+
         if (rememberMe) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.setItem('user', JSON.stringify(userData));
           setCookie('rememberedUsername', username, 30);
-          setCookie('rememberedPassword', password, 30);
+          // ELIMINADO: Guardar contraseña en cookie (Inseguro)
         } else {
-          sessionStorage.setItem('user', JSON.stringify(data.user));
+          sessionStorage.setItem('user', JSON.stringify(userData));
         }
         const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/';
         window.dispatchEvent(new CustomEvent('login', { detail: { redirectTo } }));
