@@ -1,0 +1,818 @@
+.ai-assistant-overlay {
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    background-color: transparent !important;
+    /* Dejamos que MUI maneje el fondo base */
+    transition: backdrop-filter 0.4s ease, background-color 0.4s ease !important;
+}
+
+.ai-assistant-overlay.backdrop-blur-active {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    background-color: rgba(0, 0, 0, 0.45) !important;
+    /* Un extra de oscuridad para mayor contraste */
+}
+
+/* Ventana de Chat */
+.ai-chat-window.centered {
+    width: 70vw;
+    height: 85vh;
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: 20px !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    background: white !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+    contain: layout paint;
+    /* Optimización de layout masiva - Versión segura */
+}
+
+.ai-chat-header {
+    background: transparent;
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: self-start;
+    border-bottom: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    pointer-events: none;
+    /* Permite click fuera de los botones */
+}
+
+.ai-header-title-pill,
+.ai-header-actions {
+    pointer-events: auto;
+    /* Reactiva clicks en los elementos reales */
+}
+
+/* Icono del ChatBot con Gradiente */
+.ai-header-bot-icon {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to top right, #750800 30%, #b60000 60%);
+    -webkit-mask: url('../../public/chatbot.svg') no-repeat center / contain;
+    mask: url('../../public/chatbot.svg') no-repeat center / contain;
+}
+
+.ai-header-title-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: rgb(255, 255, 255);
+    /* Más opaco para compensar la falta de blur */
+    padding: 8px 14px;
+    border-radius: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    max-height: 48px;
+    /* Altura inicial cerrada */
+    width: auto;
+    min-width: 160px;
+}
+
+.ai-header-title-pill.expanded {
+    max-height: 250px;
+    /* Aumentado ligeramente para móviles */
+    border-radius: 15px;
+    background: white;
+}
+
+.ai-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    /* Asegura que los botones no se bajen al expandir */
+}
+
+.ai-header-glass-btn {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: black !important;
+    width: 50px !important;
+    height: 50px !important;
+    transition: all 0.3s ease !important;
+}
+
+.ai-header-glass-btn:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor colapsable de cuota */
+.ai-quota-collapsible-wrapper {
+    width: 100%;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition:
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s ease,
+        margin-top 0.4s ease,
+        transform 0.3s ease;
+    pointer-events: none;
+    margin-top: 0;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.ai-header-title-pill.expanded .ai-quota-collapsible-wrapper {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    margin-top: 15px;
+    max-height: 120px;
+    /* Valor fijo permite animación suave */
+}
+
+.ai-quota-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 5px;
+}
+
+.ai-quota-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    /* Cambiado a pointer para Tooltip */
+}
+
+.ai-quota-item:hover {
+    transform: translateX(2px);
+    filter: brightness(1.2);
+}
+
+.ai-quota-icon {
+    font-size: 1rem !important;
+    width: 1rem;
+    height: 1rem;
+    object-fit: contain;
+}
+
+.ai-quota-bar-wrapper {
+    flex: 1;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ai-quota-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+.ai-quota-text {
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    color: rgba(0, 0, 0, 0.6);
+    min-width: 45px;
+    text-align: right;
+}
+
+
+
+
+/* Gradientes para Google Gemini (General) */
+.ai-quota-item.google .ai-quota-icon {
+    color: #4285f4;
+    filter: drop-shadow(0 0 3px rgba(66, 133, 244, 0.4));
+}
+
+.ai-quota-item.google .ai-quota-bar-fill {
+    background: linear-gradient(90deg, #4285f4, #00e5ff);
+}
+
+/* Gradientes para Groq (Llama) */
+.ai-quota-item.groq .ai-quota-bar-fill {
+    background: linear-gradient(90deg, #f55036, #ff8a65);
+}
+
+/* Gradientes para OpenRouter (Z.AI) */
+.ai-quota-item.openrouter .ai-quota-bar-fill {
+    background: linear-gradient(90deg, #6200ea, #ff1744);
+}
+
+.ai-messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 170px 20px 20px 20px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    scrollbar-width: thin;
+    scrollbar-color: #8a1010 transparent;
+    /* SOPORTE GPU PARA SCROLL FLUIDO */
+    transform: translateZ(0);
+    overflow-anchor: auto !important;
+    /* Mantiene la posición del scroll estable */
+}
+
+.ai-messages-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ai-messages-container::-webkit-scrollbar-thumb {
+    background-color: #8a1010;
+    border-radius: 10px;
+}
+
+.ai-message-wrapper {
+    display: flex;
+    width: 100%;
+    position: relative;
+    /* Estabilidad recuperada para listas largas */
+}
+
+.ai-message-wrapper.user {
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.ai-message-wrapper.assistant {
+    justify-content: flex-start;
+}
+
+.ai-message-bubble {
+    max-width: 75%;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 1rem;
+    /* Tamaño base reducido */
+    line-height: 1.4;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    display: block;
+    overflow: hidden;
+    word-wrap: break-word;
+    box-sizing: border-box;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transform-origin: top;
+    will-change: width, height, transform;
+}
+
+.ai-message-bubble.user {
+    background-color: #8a1010;
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.ai-message-bubble.assistant {
+    background-color: white;
+    color: #333;
+    border-bottom-left-radius: 2px;
+    border: 1px solid #eee;
+    padding-bottom: 24px !important;
+    overflow: visible !important;
+    /* Sombra simplificada para mejor scroll */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ai-message-model-tag {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 3px 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    z-index: 2;
+}
+
+.ai-message-model-tag:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: scale(1.05);
+}
+
+/* Markdown Formatting */
+.ai-message-bubble p {
+    margin: 0 0 8px 0;
+}
+
+.ai-message-bubble p:last-child {
+    margin-bottom: 0;
+    padding-right: 30px;
+}
+
+.ai-message-bubble strong {
+    color: #750000;
+    font-weight: 700;
+}
+
+/* Markdown Tables Compactas */
+.ai-message-bubble table {
+    min-width: 100%;
+    width: max-content;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 0.8rem;
+    border: 1px solid #eee;
+    background: white;
+}
+
+.ai-message-bubble th,
+.ai-message-bubble td {
+    padding: 2px 7px;
+    border: 1px solid #00000054;
+    white-space: normal;
+    /* Permitir wrap para celdas largas */
+    word-break: break-word;
+    /* Romper palabras si es necesario */
+    vertical-align: middle;
+}
+
+.ai-message-bubble th {
+    background-color: #333333;
+    /* Cabecera sutilmente diferente */
+    font-weight: 700;
+    color: white;
+}
+
+.ai-message-bubble td {
+    background-color: #ffffff;
+}
+
+
+
+/* Lists */
+.ai-message-bubble ul,
+.ai-message-bubble ol {
+    margin: 4px 0;
+    padding-left: 18px;
+}
+
+.ai-message-bubble li {
+    margin-bottom: 3px;
+}
+
+.ai-message-bubble.loading {
+    display: flex;
+    align-items: center;
+    font-style: italic;
+    background: white !important;
+    border: 1px solid #eee !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    font-weight: 600;
+    gap: 12px;
+}
+
+@keyframes shimmerText {
+    0% {
+        background-position: 200% center;
+    }
+
+    100% {
+        background-position: -200% center;
+    }
+}
+
+@keyframes pulseText {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(0.98);
+    }
+}
+
+.ai-message-bubble.loading span {
+    background: linear-gradient(90deg, #8a1010 0%, #ff4d4d 25%, #f9cb28 50%, #ff4d4d 75%, #8a1010 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    animation: shimmerText 3s infinite linear, pulseText 2s ease-in-out infinite;
+}
+
+/* Cursor de escritura - Sigue el texto dentro del contenido markdown */
+.ai-message-bubble.assistant.streaming .ai-markdown-content>*:last-child::after,
+.ai-message-bubble.assistant.streaming .ai-markdown-content li:last-child::after {
+    content: '|';
+    display: inline;
+    vertical-align: baseline;
+    margin-left: 2px;
+    color: #363636;
+    animation: blinkCursor 0.8s step-end infinite;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+@keyframes blinkCursor {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+.ai-input-area {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-model-selector-container {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(245, 245, 245, 0.9);
+    border-radius: 12px;
+    padding: 0 10px;
+}
+
+.ai-model-selector-container.visible {
+    max-height: 200px;
+    opacity: 1;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.ai-model-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.ai-model-pill:hover {
+    background: #f0f0f0;
+    transform: translateY(-1px);
+}
+
+.ai-model-pill.active {
+    background: #8a1010;
+    color: white;
+    border-color: #8a1010;
+    box-shadow: 0 3px 8px rgba(138, 16, 16, 0.3);
+}
+
+.ai-model-pill.active .ai-quota-icon {
+    filter: brightness(0) invert(1);
+    /* Hace que los iconos se vean blancos sobre el fondo rojo */
+}
+
+/* Adaptabilidad móvil */
+@media (max-width: 780px) {
+    .ai-message-bubble table {
+        font-size: 0.65rem;
+    }
+
+    .ai-message-bubble {
+        font-size: 0.78rem;
+        /* Aún más pequeño en móviles */
+        max-width: 82%;
+        padding: 6px 10px;
+    }
+
+    .ai-chat-window.centered {
+        width: 97vw;
+        max-width: 97vw;
+        height: 85vh;
+        /* Altura reducida como pediste */
+        max-height: 85vh;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        z-index: 2500;
+        animation: mobileZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Forzar que la transición se aplique también en móvil */
+    .ai-header-title-pill {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    @keyframes mobileZoomIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    .ai-messages-container {
+        padding-top: 110px;
+        /* Fixed padding, no transition needed */
+    }
+
+    .edit-message-btn {
+        opacity: 1 !important;
+        transform: none !important;
+        color: #ccc;
+    }
+
+    .ai-header-title-pill {
+        min-width: 140px;
+    }
+
+}
+
+
+.logo-gemini {
+    /* Capas de gradientes radiales posicionadas según el logo oficial */
+    background:
+        radial-gradient(circle at 50% 10%, rgba(234, 67, 53, 0.9), transparent 60%),
+        /* Rojo ARRIBA */
+        radial-gradient(circle at 90% 50%, rgba(66, 133, 244, 0.9), transparent 60%),
+        /* Azul DERECHA */
+        radial-gradient(circle at 50% 90%, rgba(52, 168, 83, 0.9), transparent 60%),
+        /* Verde ABAJO */
+        radial-gradient(circle at 10% 50%, rgba(251, 188, 5, 0.9), transparent 60%);
+    /* Amarillo IZQUIERDA */
+
+    background-color: #fff;
+    /* Base para mezcla de luz */
+    -webkit-mask: url('../../public/gemini_ico.svg') no-repeat center / contain;
+    mask: url('../../public/gemini_ico.svg') no-repeat center / contain;
+
+    filter: saturate(1.5);
+}
+
+.logo-groq {
+    background-color: #f55036;
+    -webkit-mask: url('../../public/groq-ico.svg') no-repeat center / contain;
+    mask: url('../../public/groq-ico.svg') no-repeat center / contain;
+    filter: drop-shadow(0 0 2px rgba(245, 80, 54, 0.4));
+}
+
+.logo-openrouter {
+    background: linear-gradient(135deg, #000000, #888888);
+    -webkit-mask: url('../../public/zai-ico.svg') no-repeat center / 85%;
+    mask: url('../../public/zai-ico.svg') no-repeat center / 85%;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+}
+
+/* BOTÓN DE EDITAR MENSAJE (User) */
+.ai-message-wrapper.user:hover .edit-message-btn {
+    opacity: 1 !important;
+    transform: translateX(0);
+}
+
+.edit-message-btn {
+    opacity: 0;
+    transform: translateX(5px);
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    min-width: 32px !important;
+}
+
+/* Acciones de Mensaje (Exportar) */
+.ai-message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+    padding-top: 5px;
+    opacity: 0;
+    transform: translateX(-20px);
+    /* Inicia 20px a la derecha */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    justify-content: flex-start;
+}
+
+.ai-message-bubble.assistant:hover .ai-message-actions {
+    opacity: 1;
+    transform: translateX(0);
+    /* Se desplaza a su posición original (izquierda) */
+}
+
+
+.ai-message-action-btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    width: 37px !important;
+    height: 37px !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+}
+
+.ai-message-action-btn:hover {
+    transform: scale(1.1) !important;
+}
+
+/* Icono Word */
+.logo-word-btn {
+    width: 37px;
+    height: 37px;
+    background: linear-gradient(to bottom left, #2b579a, #00a1f1);
+    -webkit-mask: url('../../public/word-ico.svg') no-repeat center / contain;
+    mask: url('../../public/word-ico.svg') no-repeat center / contain;
+    transition: all 0.3s ease;
+}
+
+
+/* Hover específico para Word */
+.ai-message-action-btn:has(.logo-word-btn):hover {
+    background: #2b579a !important;
+    box-shadow: 0 6px 15px rgba(43, 87, 154, 0.3) !important;
+}
+
+.ai-message-action-btn:has(.logo-word-btn):hover .logo-word-btn {
+    background: linear-gradient(to bottom left, #ffffff 60%, #00aaff 100%);
+}
+
+/* Hover específico para Copiar (Usando el icono de Material UI) */
+.copy-btn-custom {
+    color: #666 !important;
+}
+
+.copy-btn-custom:hover {
+    background: #444 !important;
+    color: white !important;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Contenedor de tabla con botón Excel */
+.ai-table-wrapper {
+    position: relative;
+    margin: 15px 0;
+    border-radius: 12px;
+    border: 1px solid rgb(0, 0, 0);
+    background: rgb(255, 255, 255);
+    /* Botón se posiciona relativo a este contenedor */
+}
+
+.ai-table-scroll-container {
+    overflow: auto;
+    max-height: 450px;
+    width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: #8a1010 transparent;
+    border-radius: 12px;
+}
+
+.ai-table-export-btn {
+    position: absolute !important;
+    bottom: 12px !important;
+    right: 12px !important;
+    z-index: 20;
+    /* Encima del scroll */
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    width: 37px !important;
+    height: 37px !important;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.logo-excel-btn {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(to bottom left, #1d6f42, #4caf50);
+    -webkit-mask: url('../../public/excel-ico.svg') no-repeat center / contain;
+    mask: url('../../public/excel-ico.svg') no-repeat center / contain;
+    transition: all 0.3s ease;
+}
+
+.ai-table-wrapper:hover .ai-table-export-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ai-table-export-btn:hover {
+    background: #1d6f42 !important;
+    /* Color Excel al hover */
+    transform: scale(1.1) !important;
+    box-shadow: 0 6px 15px rgba(29, 111, 66, 0.3) !important;
+}
+
+.ai-table-export-btn:hover .logo-excel-btn {
+    background: linear-gradient(to bottom left, #ffffff 60%, #5dd861 100%);
+}
+
+
+.ai-table-wrapper table {
+    margin: 0 !important;
+    /* Quitar márgenes internos que separen la tabla del borde */
+    border: none !important;
+}
+
+/* Botón de scroll al final (FIJO) */
+.ai-scroll-bottom-btn {
+    position: absolute !important;
+    bottom: 80px;
+    /* Justo encima del input area */
+    right: 25px;
+    z-index: 1000;
+    background: white !important;
+    color: #8a1010 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+.ai-scroll-bottom-btn:hover {
+    transform: scale(1.15);
+    background: #fdfdfd !important;
+    box-shadow: 0 6px 25px rgba(138, 16, 16, 0.2) !important;
+}
+
+.ai-scroll-bottom-btn svg {
+    font-size: 26px;
+}
+
+/* Notificación de Fallback de Modelo */
+.ai-fallback-notification {
+    display: flex;
+    align-items: center;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    padding: 6px 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+    animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: fit-content;
+    align-self: center;
+    max-width: 90%;
+    z-index: 5;
+}
+
+.ai-fallback-notification strong {
+    color: #f57c00;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandl
 import { useLocation } from 'react-router-dom';
 import { VentasForm, ClientesForm, EmpleadosForm, ComprasForm, InventarioForm } from './FloatingMenuForms';
 import { API_BASE_URL } from '../../utils/config';
+import { validateNicaraguanCedula, validateEmail } from '../../utils/validationUtils';
 
 const ModalFormManager = forwardRef(({
     initialData = {},
@@ -58,13 +59,30 @@ const ModalFormManager = forwardRef(({
                 }
 
                 // Fetch details for sales edit
+                // Fetch details for sales edit
                 const fetchDetails = async () => {
                     try {
-                        const response = await fetch(`${API_BASE_URL}/detalles-ventas/${initialData.id}`);
+                        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+                        const token = user?.token;
+
+                        const response = await fetch(`${API_BASE_URL}/detalles-ventas/${initialData.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.status === 401 || response.status === 403) {
+                            window.dispatchEvent(new CustomEvent('sessionExpired'));
+                            return; // Stop execution
+                        }
+
                         if (response.ok) {
                             const details = await response.json();
                             setCartItems(details);
                             setOriginalCartItems(details);
+                        } else {
+                            console.error('Failed to fetch sale details:', response.status);
                         }
                     } catch (error) {
                         console.error('Error fetching sale details:', error);
@@ -290,6 +308,22 @@ const ModalFormManager = forwardRef(({
         for (const dateVal of dateValues) {
             if (dateVal < min || dateVal > max) {
                 return `La fecha ${dateVal} está fuera del rango permitido (-10 a +3 años)`;
+            }
+        }
+
+        // 4. Validar Cédula Nicaragüense si el campo existe y estamos en el módulo correcto
+        if ((location.pathname === '/clientes' || location.pathname === '/empleados') && data.formData.numCedula) {
+            const cedulaResult = validateNicaraguanCedula(data.formData.numCedula);
+            if (!cedulaResult.isValid) {
+                return cedulaResult.error;
+            }
+        }
+
+        // 5. Validar Email si el campo existe
+        if (data.formData.correo) {
+            const emailResult = validateEmail(data.formData.correo);
+            if (!emailResult.isValid) {
+                return emailResult.error;
             }
         }
 

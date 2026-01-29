@@ -147,6 +147,10 @@ const Sales = () => {
           'Authorization': `Bearer ${token}`
         }
       });
+      if (response.status === 401 || response.status === 403) {
+        window.dispatchEvent(new CustomEvent('sessionExpired'));
+        throw new Error('Sesión expirada');
+      }
       if (response.ok) {
         const data = await response.json();
         setSaleDetails(data);
@@ -196,11 +200,6 @@ const Sales = () => {
                 background: 'linear-gradient(to top, #640c0c, #9d0000)'
               }} />
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem', color: '#1a1a1a' }}>
-                  Filtros
-                </Typography>
-              </Box>
 
               <TextField
                 id="filter-type-select"
@@ -215,7 +214,7 @@ const Sales = () => {
                   sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
                 }}
                 InputLabelProps={{
-                  sx: { color: '#555' }
+                  sx: { color: '#000000ff' }
                 }}
               >
                 <MenuItem value="nEmp">Empleado</MenuItem>
@@ -234,7 +233,7 @@ const Sales = () => {
                   if (val < minDate || val > maxDate) return;
                   setStartDate(val);
                 }}
-                InputLabelProps={{ shrink: true, sx: { color: '#555' } }}
+                InputLabelProps={{ shrink: true, sx: { color: '#000000ff' } }}
                 size="small"
                 InputProps={{
                   inputProps: { min: minDate, max: maxDate },
@@ -255,7 +254,7 @@ const Sales = () => {
                       if (val < minDate || val > maxDate) return;
                       setEndDate(val);
                     }}
-                    InputLabelProps={{ shrink: true, sx: { color: '#555' } }}
+                    InputLabelProps={{ shrink: true, sx: { color: '#000000ff' } }}
                     size="small"
                     InputProps={{
                       inputProps: { min: minDate, max: maxDate },

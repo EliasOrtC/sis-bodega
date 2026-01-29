@@ -82,6 +82,10 @@
   transition-delay: 0.4s !important;
 }
 
+.submenu.open .submenu-button:nth-child(5) {
+  transition-delay: 0.5s !important;
+}
+
 .submenu-button:active {
   transform: scale(0.95) !important;
   background: rgba(255, 255, 255, 0.25) !important;
@@ -194,11 +198,7 @@
   box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Estilo específico para el botón de Logout (usualmente el último o por contexto) */
-/* Nota: Como Material UI aplica color="error", podemos usar un selector más específico o confiar en que el usuario no quiere perder el rojo completamente, pero aquí proponemos un estilo unificado y limpio */
 
-
-/* Para el botón de Logout específicamente si es rojo */
 button.MuiButton-containedError {
   background: linear-gradient(135deg, #d32f2f, #9a0036) !important;
   color: white !important;
@@ -207,4 +207,24 @@ button.MuiButton-containedError {
 button.MuiButton-containedError:hover {
   box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4) !important;
   color: white !important;
+}
+
+.ia-button {
+  background: linear-gradient(to top right, #750800 30%, #b60000 60%) !important;
+  -webkit-mask: url('../../public/chatbot.svg') no-repeat center / contain;
+  mask: url('../../public/chatbot.svg') no-repeat center / contain;
+  width: 28px !important;
+  height: 28px !important;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ia-button-mobile {
+  background: white !important;
+  -webkit-mask: url('../../public/chatbot.svg') no-repeat center / contain;
+  mask: url('../../public/chatbot.svg') no-repeat center / contain;
+  width: 28px !important;
+  height: 28px !important;
+  display: inline-block;
+  vertical-align: middle;
 }

@@ -15,9 +15,31 @@
 }
 
 .custom-modal-backdrop {
-    /* El blur en el backdrop es estático, consume menos CPU */
-    backdrop-filter: blur(4px) brightness(0.7) !important;
-    background-color: rgba(0, 0, 0, 0.3) !important;
+    /* Base style with just the background color. */
+    /* Starting with blur(0) allows the transition to interpolate correctly */
+    background-color: rgba(0, 0, 0, 0) !important;
+    backdrop-filter: blur(0px) brightness(1) !important;
+    -webkit-backdrop-filter: blur(0px) brightness(1) !important;
+    transition: background-color 0.4s ease,
+        backdrop-filter 0.4s ease,
+        -webkit-backdrop-filter 0.4s ease !important;
+}
+
+/* This class will be applied after the modal animation finishes */
+.backdrop-blur-active {
+    backdrop-filter: blur(5px) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(5px) brightness(1.1) !important;
+    background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Optimization: Remove expensive blur on mobile devices */
+@media (max-width: 600px) {
+    .backdrop-blur-active {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        /* Darker overlay instead of blur */
+    }
 }
 
 .modal-title {
@@ -277,4 +299,24 @@
     align-items: center;
     padding-top: 15px;
     margin-top: 10px;
+}
+
+/* Estilo para links dentro de Autocomplete noOptionsText */
+.modern-link-autocomplete {
+    color: #a00d0d !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    background: rgba(160, 13, 13, 0.08) !important;
+    display: inline-block !important;
+    margin-left: 4px !important;
+    cursor: pointer !important;
+}
+
+.modern-link-autocomplete:hover {
+    background: rgba(160, 13, 13, 0.15) !important;
+    transform: translateY(-1px);
+    filter: brightness(0.9);
 }

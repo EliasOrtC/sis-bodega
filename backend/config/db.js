@@ -22,14 +22,24 @@ if (USE_LOCAL_DB) {
     execute: (query, params = []) => {
       return new Promise((resolve, reject) => {
         if (query.trim().toUpperCase().startsWith('SELECT') || query.trim().toUpperCase().startsWith('PRAGMA')) {
-          localDb.all(query, params, (err, rows) => {
-            if (err) reject(err);
-            else {
-              // Convertir array de objetos a array de arrays para compatibilidad
-              const convertedRows = rows.map(row => Object.values(row));
-              resolve({ rows: convertedRows });
+          const rows = [];
+          localDb.each(query, params,
+            (err, row) => {
+              if (err) {
+                // Error en fila individual, generalmente se maneja en complete o se aborta
+                // Para simplificar, si falla una fila, rechazamos todo
+                reject(err);
+              } else {
+                // Transformamos INMEDIATAMENTE a array de valores y descartamos el objeto original
+                // Esto "aplana" la memoria instantáneamente en lugar de acumular objetos
+                rows.push(Object.values(row));
+              }
+            },
+            (err, count) => {
+              if (err) reject(err);
+              else resolve({ rows });
             }
-          });
+          );
         } else {
           localDb.run(query, params, function (err) {
             if (err) reject(err);
@@ -226,6 +236,15 @@ if (USE_LOCAL_DB) {
     }
 
     console.log('Tablas creadas exitosamente');
+
+    // --- ÍNDICES DE OPTIMIZACIÓN ---
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_detalles_venta ON DetallesDeVentas(Id_Venta)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_detalles_producto ON DetallesDeVentas(Id_Producto)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON Ventas(FechaRegistro)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_historial_fecha ON HistorialAcciones(Fecha)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_historial_tabla ON HistorialAcciones(Tabla)`);
+    await db.execute(`CREATE INDEX IF NOT EXISTS idx_inventario_nombre ON Inventario(Nombre)`);
+    console.log('Índices de base de datos optimizados');
 
     // --- TRIGGERS PARA EL INVENTARIO ---
 

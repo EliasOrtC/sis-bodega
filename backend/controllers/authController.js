@@ -19,7 +19,7 @@ exports.login = async (req, res) => {
         }
 
         const userData = { id: user[0], username: user[2], rol: user[5] };
-        const token = jwt.sign(userData, process.env.JWT_SECRET || 'clave_temporal_por_si_no_hay_env', { expiresIn: '8h' });
+        const token = jwt.sign(userData, process.env.JWT_SECRET || 'clave_temporal_por_si_no_hay_env', { expiresIn: '30d' });
 
         res.json({
             message: 'Login exitoso',

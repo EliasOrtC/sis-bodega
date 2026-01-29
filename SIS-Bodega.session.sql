@@ -319,12 +319,22 @@
  'sofia@sistema.com',
  'Empleado'
  ); */
-delete from HistorialAcciones
-    /* DROP TABLE IF EXISTS Empleados;
-     
-     DROP TABLE IF EXISTS Proveedor;
-     DROP TABLE IF EXISTS Compras;
-     DROP TABLE IF EXISTS Ventas;
-     DROP TABLE IF EXISTS Clientes;
-     DROP TABLE IF EXISTS Usuarios;
-     DROP TABLE IF EXISTS Inventario; */
+/* delete from HistorialAcciones */
+SELECT i.Nombre,
+    SUM(d.CantidadPaquetes) as totalPaquetesVendidos,
+    SUM(d.CantidadUnidades) as totalUnidadesSueltasVendidas
+FROM Ventas v
+    INNER JOIN DetallesDeVentas d ON v.Id_Venta = d.Id_Venta
+    INNER JOIN Inventario i ON d.Id_Producto = i.Id_Producto
+WHERE v.FechaRegistro LIKE '2026-01%'
+GROUP BY i.Nombre
+ORDER BY totalPaquetesVendidos DESC,
+    totalUnidadesSueltasVendidas DESC;
+/* DROP TABLE IF EXISTS Empleados;
+ 
+ DROP TABLE IF EXISTS Proveedor;
+ DROP TABLE IF EXISTS Compras;
+ DROP TABLE IF EXISTS Ventas;
+ DROP TABLE IF EXISTS Clientes;
+ DROP TABLE IF EXISTS Usuarios;
+ DROP TABLE IF EXISTS Inventario; */

@@ -30,6 +30,10 @@ const useFloatingMenuData = (path) => {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            if (response.status === 401 || response.status === 403) {
+                window.dispatchEvent(new CustomEvent('sessionExpired'));
+                throw new Error('Sesión expirada');
+            }
             if (response.ok) {
                 const data = await response.json();
                 setter(data);

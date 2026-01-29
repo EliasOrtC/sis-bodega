@@ -16,6 +16,7 @@ const inventarioRoutes = require('./routes/inventarioRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const detallesVentasRoutes = require('./routes/detallesVentasRoutes');
 const historialRoutes = require('./routes/historialRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,7 +32,9 @@ const PORT = process.env.PORT || 5001;
 // Initialize socket notifier
 scanner.init(io);
 
-app.use(cors());
+app.use(cors({
+  exposedHeaders: ['X-Selected-Model', 'X-Selected-Provider']
+}));
 app.use(express.json());
 app.use(compression());
 
@@ -46,6 +49,7 @@ app.use('/inventario', inventarioRoutes);
 app.use('/stats', statsRoutes);
 app.use('/detalles-ventas', detallesVentasRoutes);
 app.use('/historial', historialRoutes);
+app.use('/ai', aiRoutes);
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

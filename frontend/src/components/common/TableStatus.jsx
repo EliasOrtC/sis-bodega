@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { Typography, Box, CircularProgress } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import '../../styles/Modales.css';
@@ -204,14 +205,14 @@ const TableStatus = React.memo(({ loading, error, loadingMessage, errorMessage }
         }
     };
 
-    return (
+    return ReactDOM.createPortal(
         <Box
             className="status-notification-container"
             sx={{
                 position: 'fixed',
                 top: '70px',
                 right: '20px',
-                zIndex: 2000,
+                zIndex: 9999,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-end',
@@ -224,7 +225,8 @@ const TableStatus = React.memo(({ loading, error, loadingMessage, errorMessage }
             >
                 {getNotificationContent()}
             </AnimatedNotification>
-        </Box>
+        </Box>,
+        document.body
     );
 });
 

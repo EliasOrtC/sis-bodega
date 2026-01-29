@@ -5,6 +5,8 @@ import { CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, D
 import Navbar from './components/layout/Navbar.jsx';
 import FloatingMenu from './components/layout/FloatingMenu.jsx';
 import { SelectionProvider, useSelection } from './context/SelectionContext.jsx';
+import { UIProvider, useUI } from './context/UIContext.jsx';
+import Assistant from './components/AI/Assistant.jsx';
 
 import { socket } from './utils/socket';
 import './styles/App.css';
@@ -50,9 +52,11 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <SelectionProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <UIProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </UIProvider>
       </SelectionProvider>
     </ThemeProvider>
 
@@ -79,6 +83,7 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { setSelectedItem } = useSelection();
+  const { isAssistantOpen, setAssistantOpen, toggleAssistant } = useUI();
 
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -126,8 +131,20 @@ function AppContent() {
 
   useEffect(() => {
     const handleLogin = (e) => { setIsAuthenticated(true); navigate(e.detail.redirectTo); };
+    const handleSessionExpired = () => {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      setIsAuthenticated(false);
+      navigate('/login');
+    };
+
     window.addEventListener('login', handleLogin);
-    return () => window.removeEventListener('login', handleLogin);
+    window.addEventListener('sessionExpired', handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('login', handleLogin);
+      window.removeEventListener('sessionExpired', handleSessionExpired);
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -171,7 +188,22 @@ function AppContent() {
     <>
       <div className="App">
         {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <Navbar />}
-        {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && <FloatingMenu onLogout={handleLogout} />}
+        {isAuthenticated && location.pathname !== '/login' && location.pathname !== '/graficos' && (
+          <FloatingMenu
+            onLogout={handleLogout}
+            // onToggleAssistant is now handled by FloatingMenu internal useUI hook or we pass it here?
+            // To minimize changes in FloatingMenu, we can pass it, OR update FloatingMenu.
+            // Let's pass it for now to keep FloatingMenu clean, or update FloatingMenu to use context?
+            // The previous code passed onToggleAssistant. 
+            // If we remove it from here, we MUST update FloatingMenu.
+            // Let's update FloatingMenu to use useUI, BUT we can also pass it for backward compat or just simpler refactor.
+            // Wait, 'FloatingMenu' handles the click.
+            // Let's passed it as prop for now to avoid modifying FloatingMenu excessively if not needed, 
+            // BUT I said I would update FloatingMenu. 
+            // Let's just pass the context function here.
+            onToggleAssistant={toggleAssistant}
+          />
+        )}
         <Suspense fallback={<div>Cargando...</div>}>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -189,6 +221,12 @@ function AppContent() {
             )}
           </Routes>
         </Suspense>
+        {isAuthenticated && location.pathname !== '/login' && (
+          <Assistant
+            isOpen={isAssistantOpen}
+            onClose={() => setAssistantOpen(false)}
+          />
+        )}
         <Dialog
           open={showLogoutModal}
           onClose={() => setShowLogoutModal(false)}
@@ -214,3 +252,4 @@ function AppContent() {
 }
 
 export default App;
+// Force rebuild

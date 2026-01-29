@@ -24,13 +24,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Zoom ref={ref} {...props} />;
 });
 
-const FloatingMenu = ({ onLogout }) => {
+const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedItem, setSelectedItem } = useSelection();
   const [isOpen, setIsOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isBlurActive, setIsBlurActive] = useState(false);
 
   // Consolidated for data fetching
   const { empleados, clientes, supervisores, proveedores, productos, refreshData } = useFloatingMenuData(location.pathname);
@@ -46,6 +47,19 @@ const FloatingMenu = ({ onLogout }) => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Auto-open Add modal when navigating from another module (e.g. from Autocomplete links)
+  React.useEffect(() => {
+    if (location.state?.openAddModal) {
+      // Ensure we switch to "Add" mode cleanly
+      setEditModalOpen(false);
+      setSelectedItem(null);
+      setModalOpen(true);
+
+      // Clear the state to prevent loop/re-trigger
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate, setSelectedItem]);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const handleLogout = () => onLogout();
@@ -191,6 +205,11 @@ const FloatingMenu = ({ onLogout }) => {
         body: JSON.stringify(data),
       });
 
+      if (response.status === 401 || response.status === 403) {
+        window.dispatchEvent(new CustomEvent('sessionExpired'));
+        throw new Error('Sesión expirada');
+      }
+
       if (response.ok) {
         // Handle Sales Details
         if (path === '/ventas') {
@@ -219,6 +238,11 @@ const FloatingMenu = ({ onLogout }) => {
               })
             });
 
+            if (updateResponse.status === 401 || updateResponse.status === 403) {
+              window.dispatchEvent(new CustomEvent('sessionExpired'));
+              throw new Error('Sesión expirada');
+            }
+
             if (!updateResponse.ok) {
               throw new Error('Venta actualizada pero error al actualizar detalles');
             }
@@ -243,6 +267,11 @@ const FloatingMenu = ({ onLogout }) => {
                 }))
               }),
             });
+
+            if (detallesResponse.status === 401 || detallesResponse.status === 403) {
+              window.dispatchEvent(new CustomEvent('sessionExpired'));
+              throw new Error('Sesión expirada');
+            }
 
             if (!detallesResponse.ok) {
               throw new Error('Venta guardada pero error al guardar detalles');
@@ -356,7 +385,18 @@ const FloatingMenu = ({ onLogout }) => {
               }}
               className="submenu-button"
             >
-              Ajustes
+              Configuración
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<div className="ia-button-mobile" />}
+              onClick={() => {
+                onToggleAssistant();
+                toggleMenu();
+              }}
+              className="submenu-button"
+            >
+              Asistente IA
             </Button>
             <Button
               variant="contained"
@@ -399,7 +439,7 @@ const FloatingMenu = ({ onLogout }) => {
             </Box>
           </Collapse>
 
-          <Tooltip title="Ajustes">
+          <Tooltip title="Configuración" placement="top" arrow>
             <Button
               variant="contained"
               onClick={handleSettings}
@@ -409,7 +449,16 @@ const FloatingMenu = ({ onLogout }) => {
               <SettingsIcon />
             </Button>
           </Tooltip>
-          <Tooltip title="Cerrar Sesión">
+          <Tooltip title="Asistente IA" placement="top" arrow>
+            <Button
+              variant="contained"
+              onClick={onToggleAssistant}
+              className="desktop-button-icon"
+            >
+              <div className="ia-button" aria-label="IA" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Cerrar Sesión" placement="top" arrow>
             <Button
               variant="contained"
               onClick={handleLogout}
@@ -430,8 +479,12 @@ const FloatingMenu = ({ onLogout }) => {
         maxWidth="sm"
         PaperProps={{ className: 'custom-modal-paper' }}
         TransitionComponent={Transition}
+        TransitionProps={{
+          onEntered: () => setIsBlurActive(true),
+          onExit: () => setIsBlurActive(false)
+        }}
         transitionDuration={350}
-        slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+        slotProps={{ backdrop: { className: `custom-modal-backdrop ${isBlurActive ? 'backdrop-blur-active' : ''}` } }}
         disableRestoreFocus
         disableEnforceFocus
       >
@@ -468,8 +521,12 @@ const FloatingMenu = ({ onLogout }) => {
         maxWidth="sm"
         PaperProps={{ className: 'custom-modal-paper' }}
         TransitionComponent={Transition}
+        TransitionProps={{
+          onEntered: () => setIsBlurActive(true),
+          onExit: () => setIsBlurActive(false)
+        }}
         transitionDuration={350}
-        slotProps={{ backdrop: { className: 'custom-modal-backdrop' } }}
+        slotProps={{ backdrop: { className: `custom-modal-backdrop ${isBlurActive ? 'backdrop-blur-active' : ''}` } }}
         disableRestoreFocus
         disableEnforceFocus
       >

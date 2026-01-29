@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Pagination, Box } from '@mui/material';
 import { useSelection } from '../context/SelectionContext.jsx';
 import useTableData from '../hooks/useTableData';
 import TableStatus from '../components/common/TableStatus.jsx';
@@ -16,6 +16,23 @@ const Inventario = () => {
     maxHeightValue,
     timeTransition
   } = useTableData('inventario', 'inventoryUpdated', selectedItem, setSelectedItem);
+
+  // Estados de paginación
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    if (tableRef.current) {
+      tableRef.current.scrollTop = 0;
+    }
+  };
+
+  const paginatedInventory = Array.isArray(inventory)
+    ? inventory.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+    : [];
+
+  const count = Array.isArray(inventory) ? Math.ceil(inventory.length / ITEMS_PER_PAGE) : 0;
 
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
@@ -38,7 +55,7 @@ const Inventario = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(inventory) && inventory.map((item, index) => (
+                  {paginatedInventory.map((item, index) => (
                     <TableRow
                       key={item.id}
                       style={{
@@ -62,6 +79,18 @@ const Inventario = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {/* Paginación */}
+            {count > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Pagination
+                  count={count}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            )}
             <TableStatus
               loading={loading}
               error={error}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { socket } from '../utils/socket';
 import { API_BASE_URL } from '../utils/config';
+import { useUI } from '../context/UIContext';
 
 const BASE_URL = API_BASE_URL;
 
@@ -9,6 +10,9 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tableClass, setTableClass] = useState('table-initial');
+
+    // Consumir el estado de la UI para saber si el asistente está abierto
+    const { isAssistantOpen } = useUI();
 
     // Refs for state that shouldn't trigger fetchData re-creation
     const lastCountRef = useRef(0);
@@ -34,6 +38,10 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            if (response.status === 401 || response.status === 403) {
+                window.dispatchEvent(new CustomEvent('sessionExpired'));
+                throw new Error('Sesión expirada');
+            }
             if (!response.ok) throw new Error(`Error al obtener ${endpoint}`);
             const json = await response.json();
             const dataArray = Array.isArray(json) ? json : [];
@@ -60,28 +68,38 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
 
     useEffect(() => {
         isMounted.current = true;
+
+        // Cargar datos iniciales siempre, a menos que estemos desmontando
         fetchData();
 
         const handleSocketUpdate = () => {
-            fetchData();
+            // Throttling: evitar múltiples peticiones seguidas si llegan muchos eventos de socket
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(fetchData, 300);
         };
 
-        if (socketEvent) {
+        // Solo suscribirse si el asistente NO está abierto
+        if (socketEvent && !isAssistantOpen) {
             socket.on(socketEvent, handleSocketUpdate);
         }
 
-        // Reduced polling frequency if socket is active, or use it as fallback
-        const pollingInterval = setInterval(fetchData, 15000);
+        // Sondeo inteligente: solo si la pestaña está visible y el asistente cerrado
+        const pollingInterval = setInterval(() => {
+            if (document.visibilityState === 'visible' && !isAssistantOpen) {
+                fetchData();
+            }
+        }, 30000); // Aumentado a 30s para reducir carga de red
 
         return () => {
             isMounted.current = false;
+            // Limpiar listener independientemente de si se añadió (socket.off es seguro)
             if (socketEvent) {
                 socket.off(socketEvent, handleSocketUpdate);
             }
             clearInterval(pollingInterval);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [fetchData, socketEvent]);
+    }, [fetchData, socketEvent, isAssistantOpen]);
 
     // Handle initial table transition
     useEffect(() => {
@@ -93,19 +111,21 @@ const useTableData = (endpoint, socketEvent, selectedItem, setSelectedItem) => {
         }
     }, [data.length, tableClass]);
 
-    // Sync selection
+    // Sync selection de forma eficiente (solo si cambian datos relevantes)
     useEffect(() => {
         if (selectedItem && data.length > 0) {
             const updatedItem = data.find(item => item.id === selectedItem.id);
-            if (updatedItem) {
-                // Use a more efficient check if possible, or only update if references differ
-                // but since data is new array from fetch, references will always differ.
-                // We'll keep the stringify but at least narrowed down by ID.
-                if (JSON.stringify(updatedItem) !== JSON.stringify(selectedItem)) {
+            if (!updatedItem) {
+                setSelectedItem(null);
+            } else {
+                // Solo actualizar si el objeto ha cambiado realmente (shallow equality check minimal)
+                // Comparamos campos clave o usamos un hash rápido si estuviera disponible.
+                // Como fallback seguro, comparamos el string pero solo de ESTE objeto, no del array.
+                const updatedStr = JSON.stringify(updatedItem);
+                const selectedStr = JSON.stringify(selectedItem);
+                if (updatedStr !== selectedStr) {
                     setSelectedItem(updatedItem);
                 }
-            } else {
-                setSelectedItem(null);
             }
         }
     }, [data, selectedItem, setSelectedItem]);

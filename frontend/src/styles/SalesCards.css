@@ -43,20 +43,43 @@
 }
 
 .sale-card.selected {
-    background: rgb(232, 232, 232) !important;
+    background: rgb(255, 214, 214) !important;
     border-color: #9d0000 !important;
-    box-shadow: 0 0 20px rgba(157, 0, 0, 0.15);
+    box-shadow:
+        0 0 0 2px #9d0000,
+        /* Red ring focus ring */
+        0 10px 15px -3px rgba(157, 0, 0, 0.2);
+    transform: scale(1.02);
+    z-index: 10;
 }
 
-.sale-card.selected::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 5px;
-    height: 100%;
-    background: linear-gradient(to bottom, #9d0000, #640c0c);
+/* Color adaptions for selected state */
+.sale-card.selected .sale-info-value {
+    color: #4a0000 !important;
 }
+
+.sale-card.selected .sale-info-label {
+    color: #640c0c !important;
+    opacity: 0.8;
+}
+
+.sale-card.selected .sale-date {
+    background: rgba(157, 0, 0, 0.1);
+    color: #9d0000;
+}
+
+.sale-card.selected .sale-total-amount {
+    background: linear-gradient(to right, #9d0000, #4a0000);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Targeting Material UI Icons inside the selected card */
+.sale-card.selected .MuiSvgIcon-root:not(.sale-icon-container .MuiSvgIcon-root) {
+    color: #9d0000 !important;
+}
+
 
 .sale-card-header {
     display: flex;

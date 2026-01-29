@@ -1,65 +1,202 @@
-import React, { useRef } from 'react';
-import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
+import { Card, CardContent, Typography, Grid, TextField, MenuItem, Paper, Box, Pagination } from '@mui/material';
 import { useSelection } from '../context/SelectionContext.jsx';
 import useTableData from '../hooks/useTableData';
 import TableStatus from '../components/common/TableStatus.jsx';
+import { validateAndIdentifyPhone } from '../utils/phoneUtils';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import BadgeIcon from '@mui/icons-material/Badge';
+import '../styles/ClientCards.css';
 
 const Clients = () => {
   const { selectedItem, setSelectedItem } = useSelection();
-  const tableRef = useRef(null);
+  const [filterType, setFilterType] = useState('name');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
+  const containerRef = useRef(null);
 
   const {
     data: clients,
     loading,
     error,
-    tableClass,
-    maxHeightValue,
-    timeTransition
   } = useTableData('clientes', 'clientsUpdated', selectedItem, setSelectedItem);
+
+  // Filtrado de clientes
+  const filteredClients = useMemo(() => {
+    if (!Array.isArray(clients)) return [];
+    const query = searchQuery.toLowerCase();
+
+    return clients.filter(client => {
+      if (!query) return true;
+      const fullName = `${client.nombres} ${client.apellidos}`.toLowerCase();
+      const cedula = (client.numCedula || '').toLowerCase();
+      const phone = (client.telefono || '').toLowerCase();
+      const direccion = (client.direccion || '').toLowerCase();
+
+      if (filterType === 'name') return fullName.includes(query);
+      if (filterType === 'cedula') return cedula.includes(query);
+      if (filterType === 'phone') return phone.includes(query);
+      if (filterType === 'direccion') return direccion.includes(query);
+
+      return fullName.includes(query) || cedula.includes(query) || phone.includes(query) || direccion.includes(query);
+    });
+  }, [clients, filterType, searchQuery]);
+
+  // Paginación
+  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
+  const paginatedClients = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredClients.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredClients, page]);
+
+  // Resetear página al filtrar
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, filterType]);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <Grid container spacing={2} sx={{ mt: 8, p: 2 }}>
       <Grid item xs={12}>
-        <Card sx={{ width: '100%' }} className='tarjeta'>
+        <Card sx={{ width: '100%', background: 'transparent', boxShadow: 'none' }} className='tarjeta'>
           <CardContent className='tarjeta-contenido'>
-            <Typography variant="h4">Clientes</Typography>
-            <Typography>Módulo de Clientes</Typography>
-            <TableContainer ref={tableRef} component={Paper} className={`${tableClass} div-contenedor-tabla `} sx={{ mt: 2, height: 'auto', maxHeight: maxHeightValue, overflowY: 'auto' }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Nombres y Apellidos</TableCell>
-                    <TableCell>Correo</TableCell>
-                    <TableCell>Teléfono</TableCell>
-                    <TableCell>No. Cédula</TableCell>
-                    <TableCell>Dirección</TableCell>
-                    <TableCell>Fecha De Registro</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(clients) && clients.map((client, index) => (
-                    <TableRow
-                      key={client.id}
-                      style={{
-                        opacity: 0,
-                        animation: `fadeIn 0.2s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.05}s`,
-                      }}
-                      onClick={() => {
-                        setSelectedItem(selectedItem?.id === client.id ? null : client);
-                      }}
-                      selected={selectedItem?.id === client.id}
-                    >
-                      <TableCell>{client.nombres + ' ' + client.apellidos}</TableCell>
-                      <TableCell>{client.correo}</TableCell>
-                      <TableCell>{client.telefono}</TableCell>
-                      <TableCell>{client.numCedula}</TableCell>
-                      <TableCell>{client.direccion}</TableCell>
-                      <TableCell>{client.fechaRegistro}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {/* Header Section */}
+            <Box sx={{ mb: 2, px: 1 }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Clientes</Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.8 }}>Módulo de gestión de clientes</Typography>
+            </Box>
+
+            {/* Filtros de Búsqueda */}
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 3,
+                p: { xs: 2, sm: 3 },
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '4px',
+                height: '100%',
+                background: 'linear-gradient(to top, #640c0c, #9d0000)'
+              }} />
+
+
+              <TextField
+                select
+                label="Filtrar por"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                size="small"
+                sx={{ minWidth: 150 }}
+                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fff' } }}
+              >
+                <MenuItem value="direccion">Dirección / Sector</MenuItem>
+                <MenuItem value="name">Nombre</MenuItem>
+                <MenuItem value="cedula">Cédula</MenuItem>
+                <MenuItem value="phone">Teléfono</MenuItem>
+              </TextField>
+
+              <TextField
+                label="Buscar cliente..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                size="small"
+                sx={{ minWidth: 200, flexGrow: { xs: 1, md: 0 } }}
+                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fff' } }}
+              />
+            </Paper>
+
+            {/* Clients Grid */}
+            <Box
+              ref={containerRef}
+              className="client-grid"
+            >
+              {paginatedClients.map((client, index) => {
+                const phoneInfo = validateAndIdentifyPhone(client.telefono);
+                const fullName = `${client.nombres} ${client.apellidos}`;
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=9d0000&color=fff&size=200&font-size=0.4`;
+
+                return (
+                  <div
+                    key={client.id}
+                    className={`client-card ${selectedItem?.id === client.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedItem(selectedItem?.id === client.id ? null : client)}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="client-card-image-container">
+                      <img src={avatarUrl} alt={fullName} className="client-card-image" />
+                    </div>
+
+                    <div className="client-card-content">
+                      <div className="client-name" title={fullName}>{fullName}</div>
+                      <div className="client-detail-row" title={client.numCedula}>
+                        <BadgeIcon fontSize="small" />
+                        <span className="client-detail-text">{client.numCedula || 'S/N'}</span>
+                      </div>
+                      <div className="client-detail-row" title={client.correo}>
+                        <EmailIcon fontSize="small" />
+                        <span className="client-detail-text">{client.correo || 'No registrado'}</span>
+                      </div>
+                      <div className="client-detail-row" title={client.telefono}>
+                        <PhoneIcon fontSize="small" />
+                        <span className="client-detail-text">{client.telefono}</span>
+                        {phoneInfo.carrierLogo && (
+                          <img src={phoneInfo.carrierLogo} alt={phoneInfo.carrier} style={{ height: '14px', marginLeft: '6px', borderRadius: '2px' }} />
+                        )}
+                      </div>
+                      <div className="client-detail-row" title={client.direccion}>
+                        <LocationOnIcon fontSize="small" />
+                        <span className="client-detail-text">{client.direccion || 'Sin dirección'}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </Box>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#000',
+                      bgcolor: 'rgba(255,255,255,0.7)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      '&.Mui-selected': { bgcolor: '#9d0000', color: '#fff' }
+                    }
+                  }}
+                />
+              </Box>
+            )}
+
             <TableStatus
               loading={loading}
               error={error}

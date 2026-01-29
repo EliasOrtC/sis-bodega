@@ -32,7 +32,7 @@ const Configuracion = () => {
                 <Box sx={{ px: 3, mb: 4, mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <SettingsIcon sx={{ color: 'white' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700, color: 'white' }}>
-                        Ajustes
+                        Configuración
                     </Typography>
                 </Box>
                 {menuItems.map((item) => (

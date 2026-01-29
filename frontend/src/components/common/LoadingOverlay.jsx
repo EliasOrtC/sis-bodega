@@ -11,7 +11,7 @@ const LoadingOverlay = ({ message = 'Procesando...' }) => {
                 right: 0,
                 bottom: 0,
                 backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                zIndex: 9999,
+                zIndex: 800,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',

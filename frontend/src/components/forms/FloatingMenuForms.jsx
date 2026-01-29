@@ -1,9 +1,12 @@
 import React, { memo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { Box, TextField, Autocomplete, MenuItem, Typography, Button, IconButton, Badge, Popover, Divider } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { validateAndIdentifyPhone } from '../../utils/phoneUtils';
+import { validateNicaraguanCedula, formatCedula, validateEmail } from '../../utils/validationUtils';
 
 const getBounds = () => {
     const now = new Date();
@@ -146,7 +149,7 @@ export const VentasForm = memo(({
                                                 {item.cantidadPaquetes} paq. + {item.cantidadUnidades} un.
                                             </Typography>
                                             <Typography variant="caption" sx={{ fontWeight: 700, color: '#4caf50' }}>
-                                                ${item.subtotal.toFixed(2)}
+                                                C${item.subtotal.toFixed(2)}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -178,7 +181,7 @@ export const VentasForm = memo(({
                                     Total:
                                 </Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: '#4caf50' }}>
-                                    ${calculateTotal()}
+                                    C${calculateTotal()}
                                 </Typography>
                             </Box>
                         </>
@@ -208,6 +211,15 @@ export const VentasForm = memo(({
                         setFormData(prev => ({ ...prev, id_empleado: newValue ? newValue.id : '' }));
                     }}
                     renderInput={(params) => <TextField {...params} label="Empleado" margin="normal" fullWidth className="modern-input" />}
+                    noOptionsText={
+                        <Typography variant="body2" sx={{ p: 1, textAlign: 'center' }}>
+                            {empleados.length === 0 ? (
+                                <>No hay empleados. <Link to="/empleados" state={{ openAddModal: true }} className="modern-link-autocomplete">Registrar empleado</Link></>
+                            ) : (
+                                <>¿El empleado no existe? <Link to="/empleados" state={{ openAddModal: true }} className="modern-link-autocomplete">Agregar</Link></>
+                            )}
+                        </Typography>
+                    }
                 />
                 <Autocomplete
                     id={isEdit ? "edit-cliente-select" : "add-cliente-select"}
@@ -221,6 +233,15 @@ export const VentasForm = memo(({
                         setFormData(prev => ({ ...prev, id_cliente: newValue ? newValue.id : '' }));
                     }}
                     renderInput={(params) => <TextField {...params} label="Cliente" margin="normal" fullWidth className="modern-input" />}
+                    noOptionsText={
+                        <Typography variant="body2" sx={{ p: 1, textAlign: 'center' }}>
+                            {clientes.length === 0 ? (
+                                <>No hay clientes. <Link to="/clientes" state={{ openAddModal: true }} className="modern-link-autocomplete">Registrar cliente</Link></>
+                            ) : (
+                                <>¿El cliente no existe? <Link to="/clientes" state={{ openAddModal: true }} className="modern-link-autocomplete">Agregar</Link></>
+                            )}
+                        </Typography>
+                    }
                 />
                 <TextField
                     id={isEdit ? "edit-fecha-input" : "add-fecha-input"}
@@ -256,6 +277,15 @@ export const VentasForm = memo(({
                     value={selectedProducto}
                     onChange={(event, newValue) => setSelectedProducto(newValue)}
                     renderInput={(params) => <TextField {...params} label="Producto" margin="normal" fullWidth className="modern-input" />}
+                    noOptionsText={
+                        <Typography variant="body2" sx={{ p: 1, textAlign: 'center' }}>
+                            {productos.length === 0 ? (
+                                <Link to="/inventario" state={{ openAddModal: true }} className="modern-link-autocomplete">Agregue un producto</Link>
+                            ) : (
+                                <>¿El producto no existe? <Link to="/inventario" state={{ openAddModal: true }} className="modern-link-autocomplete">Agregar</Link></>
+                            )}
+                        </Typography>
+                    }
                     renderOption={(props, option) => {
                         const available = getAvailableStock(option);
                         const isOutOfStock = available.total <= 0;
@@ -371,16 +401,116 @@ export const VentasForm = memo(({
 });
 
 
+
 export const ClientesForm = memo(({ formData, setFormData, isEdit }) => {
     const prefix = isEdit ? 'edit-cliente-' : 'add-cliente-';
+    const [phoneStatus, setPhoneStatus] = useState({ isValid: true, carrier: null, error: null, carrierColor: '#757575' });
+    const [cedulaStatus, setCedulaStatus] = useState({ isValid: true, error: null });
+    const [emailStatus, setEmailStatus] = useState({ isValid: true, error: null });
+
+    // Validar teléfono al cargar (si es editar) o al cambiar
+    React.useEffect(() => {
+        if (formData.telefono) {
+            const result = validateAndIdentifyPhone(formData.telefono);
+            setPhoneStatus(result);
+        } else {
+            setPhoneStatus({ isValid: true, carrier: null, error: null });
+        }
+    }, [formData.telefono]);
+
+    // Validar cédula al cambiar
+    React.useEffect(() => {
+        if (formData.numCedula) {
+            const result = validateNicaraguanCedula(formData.numCedula);
+            setCedulaStatus(result);
+        } else {
+            setCedulaStatus({ isValid: true, error: null });
+        }
+    }, [formData.numCedula]);
+
+    // Validar email al cambiar
+    React.useEffect(() => {
+        if (formData.correo) {
+            const result = validateEmail(formData.correo);
+            setEmailStatus(result);
+        } else {
+            setEmailStatus({ isValid: true, error: null });
+        }
+    }, [formData.correo]);
+
+    const handlePhoneChange = (e) => {
+        const val = e.target.value;
+        setFormData({ ...formData, telefono: val });
+    };
+
+    const handleCedulaChange = (e) => {
+        const val = e.target.value;
+        const formatted = formatCedula(val);
+        setFormData({ ...formData, numCedula: formatted });
+    };
+
     return (
         <>
             <TextField id={`${prefix}nombres`} label="Nombres" required fullWidth margin="normal" value={formData.nombres || ''} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="modern-input" />
             <TextField id={`${prefix}apellidos`} label="Apellidos" required fullWidth margin="normal" value={formData.apellidos || ''} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}correo`} label="Correo" required type="email" fullWidth margin="normal" value={formData.correo || ''} onChange={(e) => setFormData({ ...formData, correo: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}telefono`} label="Teléfono" required fullWidth margin="normal" value={formData.telefono || ''} onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} className="modern-input" />
+            <TextField
+                id={`${prefix}correo`}
+                label="Correo"
+                required
+                type="email"
+                fullWidth
+                margin="normal"
+                value={formData.correo || ''}
+                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+                className="modern-input"
+                error={!!emailStatus.error && formData.correo?.length > 0}
+                helperText={!!emailStatus.error && formData.correo?.length > 0 ? emailStatus.error : ""}
+            />
+
+            <TextField
+                id={`${prefix}telefono`}
+                label="Teléfono"
+                required
+                fullWidth
+                margin="normal"
+                value={formData.telefono || ''}
+                onChange={handlePhoneChange}
+                className="modern-input"
+                error={!!phoneStatus.error && formData.telefono?.length > 0}
+                helperText={
+                    <span style={{ display: 'block' }}>
+                        {!!phoneStatus.error && formData.telefono?.length > 0 && (
+                            <span style={{ color: '#d32f2f', display: 'block', marginBottom: '2px' }}>{phoneStatus.error}</span>
+                        )}
+                        {phoneStatus.carrier && (
+                            <span style={{ color: phoneStatus.carrierColor, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                {phoneStatus.carrierLogo && (
+                                    <img
+                                        src={phoneStatus.carrierLogo}
+                                        alt="Carrier"
+                                        style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                    />
+                                )}
+                                {phoneStatus.carrier}
+                            </span>
+                        )}
+                    </span>
+                }
+            />
+
             <TextField id={`${prefix}fecha`} label="Fecha Registro" required type="date" fullWidth margin="normal" value={formData.fechaRegistro || ''} onChange={(e) => setFormData({ ...formData, fechaRegistro: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
-            <TextField id={`${prefix}cedula`} label="Número Cédula" required fullWidth margin="normal" value={formData.numCedula || ''} onChange={(e) => setFormData({ ...formData, numCedula: e.target.value })} className="modern-input" />
+            <TextField
+                id={`${prefix}cedula`}
+                label="Número Cédula"
+                required
+                fullWidth
+                margin="normal"
+                value={formData.numCedula || ''}
+                onChange={handleCedulaChange}
+                className="modern-input"
+                error={!!cedulaStatus.error && formData.numCedula?.length > 10}
+                helperText={!!cedulaStatus.error && formData.numCedula?.length > 10 ? cedulaStatus.error : "Formato: 001-000000-0000X"}
+            />
             <TextField id={`${prefix}direccion`} label="Dirección" required fullWidth margin="normal" value={formData.direccion || ''} onChange={(e) => setFormData({ ...formData, direccion: e.target.value })} className="modern-input" />
         </>
     );
