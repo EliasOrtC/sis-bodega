@@ -14,22 +14,24 @@
     backface-visibility: hidden;
 }
 
+
 .custom-modal-backdrop {
-    /* Base style with just the background color. */
-    /* Starting with blur(0) allows the transition to interpolate correctly */
-    background-color: rgba(0, 0, 0, 0) !important;
-    backdrop-filter: blur(0px) brightness(1) !important;
-    -webkit-backdrop-filter: blur(0px) brightness(1) !important;
-    transition: background-color 0.4s ease,
-        backdrop-filter 0.4s ease,
-        -webkit-backdrop-filter 0.4s ease !important;
+    /* Optimización: Solo transición de opacidad, el blur se maneja por hardware */
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Dejar que MUI maneje la transición de opacidad base */
+    transition: opacity 400ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: opacity;
 }
 
-/* This class will be applied after the modal animation finishes */
+/* Solo aplicar blur cuando el modal está totalmente abierto y estable */
 .backdrop-blur-active {
-    backdrop-filter: blur(5px) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(5px) brightness(1.1) !important;
-    background-color: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(8px) brightness(0.8) !important;
+    -webkit-backdrop-filter: blur(8px) brightness(0.8) !important;
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    /* Forzar aceleración por hardware */
+    transform: translateZ(0);
 }
 
 /* Optimization: Remove expensive blur on mobile devices */
@@ -182,9 +184,15 @@
     animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
 
-/* notificaciones para el movil */
+.status-notification-container {
+    z-index: 1300 !important;
+    position: fixed !important;
+    top: 70px !important;
+    right: 10px !important;
+}
 
 /* notificaciones para el movil */
+
 @media (max-width: 768px) {
     .status-notification-container {
         position: fixed !important;

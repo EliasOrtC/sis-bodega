@@ -1,6 +1,15 @@
 {
-  "lastReset": "Thu Jan 29 2026",
+  "lastReset": "Sun Feb 01 2026",
   "usage": {
+    "AIzaSyBR": {
+      "gemini-2.5-flash": 2
+    },
+    "AIzaSyDI": {
+      "gemini-2.5-flash": 2
+    },
+    "AIzaSyAo": {
+      "gemini-2.5-flash": 1
+    },
     "AIzaSyDb": {
       "gemini-2.5-flash": 2
     }

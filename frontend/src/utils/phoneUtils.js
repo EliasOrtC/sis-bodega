@@ -30,7 +30,7 @@ export const validateAndIdentifyPhone = (phoneNumber, countryCode = 'NI') => {
             if (prefix1 === '5') {
                 carrier = 'Claro (Probable)';
                 carrierColor = '#b20f00ff';
-                carrierLogo = 'https://w7.pngwing.com/pngs/901/902/png-transparent-claro-hd-logo-thumbnail.png';
+                carrierLogo = 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Claro.svg';
             } else if (prefix1 === '7') {
                 carrier = 'Tigo (Probable)';
                 carrierColor = '#00377d';
@@ -39,7 +39,7 @@ export const validateAndIdentifyPhone = (phoneNumber, countryCode = 'NI') => {
                 if (['84', '86', '88', '83'].includes(prefix2)) {
                     carrier = 'Claro (Probable)';
                     carrierColor = '#b20f00ff';
-                    carrierLogo = 'https://w7.pngwing.com/pngs/901/902/png-transparent-claro-hd-logo-thumbnail.png';
+                    carrierLogo = 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Claro.svg';
                 } else if (['81', '82', '85', '87', '89'].includes(prefix2)) {
                     carrier = 'Tigo (Probable)';
                     carrierColor = '#00377d';

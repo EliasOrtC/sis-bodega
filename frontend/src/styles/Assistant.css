@@ -508,7 +508,7 @@
     .ai-message-bubble {
         font-size: 0.78rem;
         /* Aún más pequeño en móviles */
-        max-width: 82%;
+        max-width: 90%;
         padding: 6px 10px;
     }
 

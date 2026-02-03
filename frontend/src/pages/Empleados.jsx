@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect, useRef } from 'react';
-import { Card, CardContent, Typography, Grid, TextField, MenuItem, Paper, Box, Pagination, Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton, Divider } from '@mui/material';
+import { Card, CardContent, Typography, Grid, TextField, MenuItem, Paper, Box, Pagination, Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton, Divider, InputAdornment, Chip, Tooltip } from '@mui/material';
 import { useSelection } from '../context/SelectionContext.jsx';
 import useTableData from '../hooks/useTableData';
 import TableStatus from '../components/common/TableStatus.jsx';
@@ -11,13 +11,17 @@ import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import TuneIcon from '@mui/icons-material/Tune';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 import '../styles/EmployeeCards.css';
 
 const Employees = () => {
   const { selectedItem, setSelectedItem } = useSelection();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [viewedEmployee, setViewedEmployee] = useState(null);
-  const [filterType, setFilterType] = useState('all');
+  const [filterType, setFilterType] = useState('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -86,58 +90,150 @@ const Employees = () => {
               <Typography variant="subtitle1" sx={{ opacity: 0.8 }}>Módulo de gestión de recursos humanos</Typography>
             </Box>
 
-            {/* Filtros de Búsqueda */}
+            {/* Contenedor de Filtros Moderno */}
             <Paper
               elevation={0}
               sx={{
-                mb: 3,
-                p: { xs: 2, sm: 3 },
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(0, 0, 0, 0.05)',
+                mb: 4,
+                p: { xs: 2.5, sm: 3 },
+                borderRadius: '24px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(12px) saturate(180%)',
+                border: '1px solid rgba(157, 0, 0, 0.1)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
-                gap: 2,
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 3,
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
                 position: 'relative',
                 overflow: 'hidden'
               }}
             >
               <Box sx={{
                 position: 'absolute',
-                top: 0,
+                top: '20%',
                 left: 0,
                 width: '4px',
-                height: '100%',
-                background: 'linear-gradient(to top, #640c0c, #9d0000)'
+                height: '60%',
+                background: 'linear-gradient(to bottom, #9d0000, #640c0c)',
+                borderRadius: '0 4px 4px 0'
               }} />
 
-              <TextField
-                select
-                label="Filtrar por"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                size="small"
-                sx={{ minWidth: 150 }}
-                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fff' } }}
-              >
-                <MenuItem value="all">General</MenuItem>
-                <MenuItem value="name">Nombre</MenuItem>
-                <MenuItem value="cedula">Cédula</MenuItem>
-                <MenuItem value="sector">Sector</MenuItem>
-                <MenuItem value="status">Estado</MenuItem>
-              </TextField>
+              {/* Información y Contador */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, width: { xs: '100%', md: 'auto' } }}>
+                <Box sx={{
+                  p: 1.5,
+                  borderRadius: '14px',
+                  bgcolor: 'rgba(157, 0, 0, 0.08)',
+                  color: '#9d0000',
+                  display: 'flex'
+                }}>
+                  <TuneIcon />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#1a1a1a', lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    Búsqueda
+                    <Chip label={filteredEmployees.length} size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#9d0000', color: '#fff', fontWeight: 900 }} />
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
+                    Gestiona tu personal
+                  </Typography>
+                </Box>
+              </Box>
 
-              <TextField
-                label="Buscar empleado..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                size="small"
-                sx={{ minWidth: 200, flexGrow: { xs: 1, md: 0 } }}
-                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fff' } }}
-              />
+              <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' }, mx: 1, borderColor: 'rgba(0,0,0,0.06)' }} />
+
+              {/* Inputs Integrados */}
+              <Box sx={{
+                display: 'flex',
+                flexGrow: 1,
+                width: '100%',
+                gap: 1.5,
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
+                <TextField
+                  select
+                  label="Filtrar por"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  size="small"
+                  sx={{
+                    minWidth: { sm: 180 },
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '14px',
+                      bgcolor: '#fff',
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000' }
+                    },
+                    '& .MuiInputLabel-root': { color: '#666' },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#9d0000' }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FilterListIcon sx={{ color: '#9d0000', fontSize: '1.2rem' }} />
+                      </InputAdornment>
+                    ),
+                    sx: { color: 'black', fontWeight: 500 }
+                  }}
+                >
+                  <MenuItem value="name">Por Nombre</MenuItem>
+                  <MenuItem value="cedula">Por Cédula</MenuItem>
+                  <MenuItem value="sector">Por Sector</MenuItem>
+                  <MenuItem value="status">Por Estado</MenuItem>
+                </TextField>
+
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Escribe para buscar empleado..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="small"
+                  sx={{
+                    flexGrow: 1,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '14px',
+                      bgcolor: '#fff',
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000', borderWidth: '2px' }
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: '#aaa' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <Tooltip title="Limpiar búsqueda">
+                          <IconButton size="small" onClick={() => setSearchQuery('')}>
+                            <CloseIcon sx={{ fontSize: '1rem' }} />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ),
+                    sx: { color: 'black' }
+                  }}
+                />
+              </Box>
+
+              {/* Botón de Limpieza General */}
+              {(searchQuery || filterType !== 'name') && (
+                <Tooltip title="Restablecer filtros">
+                  <IconButton
+                    onClick={() => { setSearchQuery(''); setFilterType('name'); }}
+                    sx={{
+                      color: '#9d0000',
+                      bgcolor: 'rgba(157,0,0,0.05)',
+                      '&:hover': { bgcolor: 'rgba(157,0,0,0.1)' }
+                    }}
+                  >
+                    <ClearAllIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Paper>
 
             <Box

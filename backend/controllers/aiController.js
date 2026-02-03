@@ -434,15 +434,15 @@ const dbTools = {
     consultarHistorialAcciones: async (args) => {
         try {
             const query = args?.producto ?
-                `SELECT UsuarioNombre, Accion, Descripcion, Fecha FROM HistorialAcciones WHERE Descripcion LIKE ? ORDER BY Fecha ASC LIMIT 20` :
-                `SELECT UsuarioNombre, Accion, Descripcion, Fecha FROM HistorialAcciones ORDER BY Fecha ASC LIMIT 20`;
+                `SELECT UsuarioNombre, Accion, Descripcion, Fecha FROM HistorialAcciones WHERE Descripcion LIKE ? ORDER BY Fecha DESC LIMIT 30` :
+                `SELECT UsuarioNombre, Accion, Descripcion, Fecha FROM HistorialAcciones ORDER BY Fecha DESC LIMIT 30`;
             const result = await db.execute(query, args?.producto ? [`%${args.producto}%`] : []);
             return { historial: result.rows.map(row => ({ usuario: row[0], accion: row[1], detalle: row[2], fecha: row[3] })) };
         } catch (error) { return { error: "Error en historial." }; }
     }
 };
 
-const getSystemContext = async (userData, modelName = "general") => {
+const getSystemContext = async (userData, history = [], modelName = "general") => {
     try {
         const inv = await db.execute('SELECT COUNT(*) FROM Inventario');
         const vts = await db.execute('SELECT COUNT(*) FROM Ventas');
@@ -454,59 +454,50 @@ const getSystemContext = async (userData, modelName = "general") => {
         let nameToUse = userData?.NombreCompleto?.trim() || "Estimado(a)";
         let userRole = userData?.rol || "usuario";
 
+        // Determinar si es la primera consulta real (sin contar mensajes de sistema o errores previos)
+        const isFirstMessage = !history || history.length === 0;
+
         return `Eres el Analista de Datos de SIS-Bodega. (Usuario: ${nameToUse}, Rol: ${userRole}).
         ESTADO ACTUAL: ${inv.rows[0][0]} Productos, ${vts.rows[0][0]} Ventas, ${emp.rows[0][0]} Empleados. Fecha: ${fullDate} ${time}.
 
-        --- REGLA DE ORO (ANTI-ALUCINACIÓN) ---
-        - NO INVENTES: No conoces nombres de personas, productos ni ventas de antemano.
-        - PROHIBIDO INVENTAR DATOS DE CONTACTO: NUNCA inventes correos electrónicos, teléfonos o direcciones. Si necesitas dar estos datos y no los tienes de una herramienta en este turno, BUSCA a la persona primero. No asumas que un correo es "nombre@example.com".
-        - OBLIGATORIEDAD DE TOOLS: Para CUALQUIER información de la base de datos, DEBES usar una herramienta en el turno actual, incluso si el nombre de la persona o producto ya apareció en mensajes anteriores del historial. El historial solo sirve para contexto, NO para datos técnicos exactos.
-        - PROHIBIDO INVENTAR EJEMPLOS: Bajo ninguna circunstancia muestres datos ficticios. Si la herramienta no devuelve datos, di simplemente: "No se encontraron registros para esta consulta".
- 
+        --- REGLA DE ORO (ANTI-ALUCINACIÓN RADICAL) ---
+        - PROHIBIDO INVENTAR: No tienes conocimiento previo de ningún nombre de cliente, empleado, producto o factura. Si una herramienta devuelve un array vacío, responde ÚNICAMENTE: "No se encontraron registros para esta consulta".
+        - NUNCA INVENTES EJEMPLOS: Si el usuario pregunta por "Juan Pérez" y buscarPersona no devuelve nada, NO digas "No encontré a Juan pero tengo a Pedro". Di secamente que Juan Pérez no existe en la base de datos.
+        - PROHIBIDO INVENTAR CONTACTOS: NUNCA generes correos (@example.com), teléfonos o direcciones ficticias. Si la base de datos no tiene el teléfono, di "Dato no registrado".
+        - OBLIGATORIEDAD DE TOOLS: Incluso si el usuario te repite un nombre que ya viste hace 2 mensajes, DEBES volver a usar la herramienta si necesitas datos técnicos de ese registro. El historial es solo para contexto conversacional, NO es una fuente de datos verídica.
+
         --- PRIVACIDAD Y SEGURIDAD (EXTREMO) ---
-        - PROHIBIDO MOSTRAR IDs: Nunca, bajo ningún concepto, incluyas columnas de ID.
+        - PROHIBIDO MOSTRAR IDs: Nunca incluyas columnas de ID internas de la base de datos.
         - RBAC: Si eres VENDEDOR, oculta costos y utilidades.
- 
-        --- PROTOCOLO DE RESPUESTA OBLIGATORIO ---
-        1. SALUDO DINÁMICO: "Buenos días/tardes/noches (según la hora ${time}) ${nameToUse}. Claro, aquí tiene...". SOLO saluda una vez al inicio del mensaje; NO repitas el saludo si estás continuando una respuesta tras usar una herramienta.
-        2. TÍTULO: Agrega un **Título en Negrita** descriptivo tras el saludo inicial.
-        3. FORMATO DE TABLAS (ESTRICTO): Toda información de registros DEBE mostrarse en **Tablas de Markdown**. NO uses listas.
+
+        --- PROTOCOLO DE RESPUESTA Y CORTESÍA ---
+        1. SALUDO CONDICIONAL:
+           - SI ES LA PRIMERA CONSULTA (isFirstMessage: ${isFirstMessage}): Saluda cortésmente: "Buenos días/tardes/noches ${nameToUse}. Claro, aquí tiene...".
+           - SI YA HAY HISTORIAL: NO saludes, NO digas "Hola", y NO uses el nombre del usuario. Responde DIRECTAMENTE a la pregunta de forma técnica y profesional.
+        2. TÍTULO: Agrega un **Título en Negrita** descriptivo al inicio de cada respuesta.
+        3. FORMATO DE TABLAS (ESTRICTO): Toda información de registros DEBE mostrarse en **Tablas de Markdown**. NO uses listas para datos tabulares.
         4. TABLAS DE VENTAS (ORDEN): **Fecha | Cliente | Vendedor | Productos | Volumen Total | Total**.
            - Si una venta incluye múltiples productos, lístalos TODOS en la misma celda de la columna "Productos" usando saltos de línea (<br>).
         5. CANTIDADES: Usa el campo 'volumenTotal' (formato decimal: 45.333).
- 
-        6. REGLA DE MEMORIA: Si el usuario pregunta detalles adicionales sobre una persona que viste en un reporte de ventas (como su correo o teléfono), NO asumas que los conoces. Usa 'buscarPersona' obligatoriamente.
- 
+
+        6. REGLA DE MEMORIA: NO asumas que conoces los datos de contacto de alguien solo porque viste su nombre en una tabla anterior. Usa 'buscarPersona' obligatoriamente para obtener detalles.
+
         7. GRÁFICOS (JSON Recharts) - MÁXIMA LEGIBILIDAD:
            - USA "chartType" (bar|line|pie|area).
-           - REGLA: "volumenTotal" es el valor numérico.
-           - FORMATO: \`\`\`json {"chartType": "bar", "data": [{"name": "01", "Prod A": 10}], "title": "Dic - Semana 1"} \`\`\`
+           - FORMATO: \`\`\`json {"chartType": "bar", "data": [...], "title": "..."} \`\`\`
            
-           *** REGLA DE ORO: FRAGMENTACIÓN DE GRÁFICOS (PRE-PROCESADA) ***
-           La herramienta 'consultarVentasPorDia' ahora devuelve un objeto "resumenSemanal" donde las llaves son los títulos sugeridos (ej: "Dic - Semana 1") y los valores son los datos listos para el gráfico.
-           
-           TU TRABAJO ES SIMPLE:
-           1. Itera sobre las llaves de "resumenSemanal".
-           2. Por cada llave, genera UN bloque JSON.
-           3. Título = La llave del objeto (ej: "Diciembre - Semana 1").
-           4. Data = El array asociado a esa llave.
-           
-           NO RECALCULES SEMANAS. Confía en la agrupación de la herramienta.
-           
-           Ejemplo:
-           Si recibes: { "Ene - Sem 1": [{name: "LUN 01"...}] }
-           Genera: \`\`\`json {"chartType": "bar", "data": [{"name": "LUN 01"...}], "title": "Ene - Sem 1"} \`\`\`
+           *** REGLA DE ORO: FRAGMENTACIÓN DE GRÁFICOS ***
+           Usa estrictamente la agrupación "resumenSemanal" que devuelve 'consultarVentasPorDia'. Genera un gráfico JSON por cada semana devuelta.
 
-        8. DIAGRAMAS (Mermaid): Para procesos o flujos.
-           - SINTAXIS: Usa siempre \`graph TD;\`.
-           - NODOS: IDs simples y texto SIEMPRE entre comillas: A["Texto con espacios"].
+        8. DIAGRAMAS (Mermaid): Para procesos o flujos. Usa \`graph TD;\` y nodos entre comillas: A["Texto"].
 
-        9. FINALIZA con exactamente 2 sugerencias: *¿...?*
+        9. FINALIZA con 2 sugerencias: *¿...?*
 
         --- CLARIDAD DE ANÁLISIS ---
-        - Para RANKINGS globales: Usa 'obtenerRankingVentasReales'.
-        - PARA TENDENCIAS: Usa 'consultarVentasPorDia'.
-        - PARA DATOS DE PERSONAS (Correos, Sectores, Contacto): Usa 'buscarPersona' o 'consultarClientes'/'consultarEmpleados'.`;
+        - RANKINGS: 'obtenerRankingVentasReales'.
+        - TENDENCIAS: 'consultarVentasPorDia'.
+        - PERSONAS: 'buscarPersona' o 'consultarClientes'/'consultarEmpleados'.
+        - ACTIVIDAD RECIENTE O INSERCIONES: Si el usuario pregunta por "últimos registros", "movimientos recientes" o "qué se ha hecho", usa OBLIGATORIAMENTE 'consultarHistorialAcciones'. Es la fuente oficial de actividad del sistema.`;
     } catch (error) {
         console.error("Error en getSystemContext:", error);
         return "Analista SIS-Bodega. Error interno.";
@@ -656,8 +647,8 @@ const callGemini = async (key, modelName, message, history, systemPrompt, res) =
             { name: "verificarAnomaliasPrecios", description: "Detecta productos con precio de venta menor o igual al costo. Auditoría." },
             {
                 name: "consultarHistorialAcciones",
-                description: "Rastrea quién hizo qué en el sistema. Puedes filtrar por 'producto'. Auditoría.",
-                parameters: { type: "OBJECT", properties: { producto: { type: "STRING" } } }
+                description: "Muestra la actividad general más reciente: quién insertó, editó o eliminó registros (Ventas, Compras, Inventario, etc.). Úsala ante preguntas como 'qué se ha hecho', 'últimos movimientos' o 'registros recientes'.",
+                parameters: { type: "OBJECT", properties: { producto: { type: "STRING", description: "Opcional: filtrar por nombre de producto." } } }
             }
         ]
     }];
@@ -827,6 +818,11 @@ const callGemini = async (key, modelName, message, history, systemPrompt, res) =
                 continue;
             } else {
                 // Turno final
+                if (cumulativeLog.trim()) {
+                    console.log("\n--- RESPUESTA COMPLETA DE LA IA ---");
+                    console.log(cumulativeLog.trim().replace(/\n{3,}/g, '\n\n'));
+                    console.log("----------------------------------\n");
+                }
                 res.end();
                 return true;
             }
@@ -1190,8 +1186,8 @@ const chatWithAI = async (req, res) => {
             if (!provider || provider.keys.length === 0) continue;
 
             const modelName = item.m;
-            // Generar prompt específico para este intento de modelo
-            const systemPrompt = await getSystemContext(userData, modelName);
+            // Generar prompt específico para este intento de modelo (pasando el historial)
+            const systemPrompt = await getSystemContext(userData, history, modelName);
 
             // Inicializar índice de rotación
             if (keyRotationIndex[provider.id] === undefined) keyRotationIndex[provider.id] = 0;

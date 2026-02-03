@@ -147,7 +147,8 @@ if (USE_LOCAL_DB) {
       CantidadUnidades INTEGER DEFAULT 0,
       CantidadPaquetes INTEGER DEFAULT 0,
       PrecioVenta_Paq REAL DEFAULT 0,
-      PrecioCompra_Paq REAL DEFAULT 0
+      PrecioCompra_Paq REAL DEFAULT 0,
+      Imagen_Url TEXT
     )`);
 
 

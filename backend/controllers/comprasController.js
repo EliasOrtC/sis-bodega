@@ -20,9 +20,11 @@ exports.addCompra = async (req, res) => {
         const { fechaDeCompra, id_proveedor, totalCompra } = req.body;
         const { id: userId, username } = req.user;
         await db.execute('INSERT INTO Compras (FechaDeCompra, Id_Proveedor, TotalCompra) VALUES (?, ?, ?)', [fechaDeCompra, id_proveedor, totalCompra]);
-        await logAction(userId, username, 'Compras', 'INSERT', `Compra agregada por un total de ${totalCompra}`);
+        const compraIdResult = await db.execute('SELECT last_insert_rowid() as id');
+        const compraId = compraIdResult.rows[0][0];
+        await logAction(userId, username, 'Compras', 'INSERT', `(ID${compraId}) Compra agregada por un total de ${totalCompra}`);
         scanner.notificarCompras();
-        res.status(201).json({ message: 'Compra agregada correctamente' });
+        res.status(201).json({ message: `(ID${compraId}) Compra agregada correctamente` });
     } catch (error) {
         console.error('Error adding purchase:', error);
         res.status(500).json({ error: 'Error al agregar la compra' });
@@ -41,12 +43,12 @@ exports.updateCompra = async (req, res) => {
             const row = oldResult.rows[0];
             const oldData = { fechaDeCompra: row[1], id_proveedor: row[2], totalCompra: row[3] };
             const diff = getDiffDescription(oldData, req.body);
-            await logAction(userId, username, 'Compras', 'UPDATE', `Compra ID ${id}: ${diff}`);
+            await logAction(userId, username, 'Compras', 'UPDATE', `(ID${id}) Compra actualizada: ${diff}`);
         }
 
         await db.execute('UPDATE Compras SET FechaDeCompra = ?, Id_Proveedor = ?, TotalCompra = ? WHERE Id_Compra = ?', [fechaDeCompra, id_proveedor, totalCompra, id]);
         scanner.notificarCompras();
-        res.json({ message: 'Compra actualizada correctamente' });
+        res.json({ message: `(ID${id}) Compra actualizada correctamente` });
     } catch (error) {
         console.error('Error updating purchase:', error);
         res.status(500).json({ error: 'Error al actualizar la compra' });

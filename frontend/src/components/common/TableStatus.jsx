@@ -39,7 +39,6 @@ const NotificationBox = ({ children, isError, status }) => {
         <Box
             sx={{
                 backgroundColor: colors.bg,
-                backdropFilter: 'blur(4px) saturate(180%)',
                 padding: '14px 24px',
                 borderRadius: '16px',
                 boxShadow: `
@@ -118,7 +117,8 @@ const AnimatedNotification = ({ show, children, isError, status }) => {
                     ? 'slideOutLeft 0.5s cubic-bezier(0.4, 0, 1, 1) forwards'
                     : 'slideInRight 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                 mb: 1.5,
-                perspective: '1000px'
+                perspective: '1000px',
+                backdropFilter: 'blur(2px) saturate(180%)',
             }}
         >
             <NotificationBox isError={displayIsError} status={displayStatus}>

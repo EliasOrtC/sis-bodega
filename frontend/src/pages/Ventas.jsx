@@ -1,14 +1,20 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Card, CardContent, Typography, Grid, Paper, Box, TextField, MenuItem,
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  CircularProgress, IconButton, Pagination
+  CircularProgress, IconButton, Pagination, InputAdornment, Chip, Tooltip, Divider
 } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PersonIcon from '@mui/icons-material/Person';
 import BadgeIcon from '@mui/icons-material/Badge';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import TuneIcon from '@mui/icons-material/Tune';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSelection } from '../context/SelectionContext.jsx';
 import useTableData from '../hooks/useTableData';
 import TableStatus from '../components/common/TableStatus.jsx';
@@ -113,6 +119,17 @@ const Sales = () => {
     setPage(1);
   }, [filterType, startDate, endDate, searchQuery, sales.length]);
 
+  // Efecto para restablecer las fechas cuando se cambia de "Fecha Única" a otro filtro
+  const prevFilterTypeRef = useRef(filterType);
+  useEffect(() => {
+    if (prevFilterTypeRef.current === 'single' && filterType !== 'single') {
+      const { startStr, endStr } = getDefaultDates();
+      setStartDate(startStr);
+      setEndDate(endStr);
+    }
+    prevFilterTypeRef.current = filterType;
+  }, [filterType]);
+
   const paginatedSales = React.useMemo(() => {
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
     return filteredSales.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -172,116 +189,208 @@ const Sales = () => {
               <Typography sx={{ color: '#9f9f9fff' }}>Módulo de Ventas</Typography>
             </Box>
 
-            {/* Box de Filtros Moderno - Estilo Claro */}
+            {/* Contenedor de Filtros Moderno */}
             <Paper
               elevation={0}
               sx={{
-                mb: 3,
-                p: 3,
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(0, 0, 0, 0.05)',
+                mb: 4,
+                p: { xs: 2.5, sm: 3 },
+                borderRadius: '24px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(12px) saturate(180%)',
+                border: '1px solid rgba(157, 0, 0, 0.1)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
-                gap: 3,
-                alignItems: 'center',
-                flexWrap: 'wrap',
+                flexDirection: 'column',
+                gap: 2.5,
                 position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.3s ease'
+                overflow: 'hidden'
               }}
             >
               <Box sx={{
                 position: 'absolute',
-                top: 0,
+                top: '15%',
                 left: 0,
                 width: '4px',
-                height: '100%',
-                background: 'linear-gradient(to top, #640c0c, #9d0000)'
+                height: '70%',
+                background: 'linear-gradient(to bottom, #9d0000, #640c0c)',
+                borderRadius: '0 4px 4px 0'
               }} />
 
+              {/* Fila Superior: Info y Fechas */}
+              <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: 'center',
+                gap: 3
+              }}>
+                {/* Info y Contador */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, width: { xs: '100%', md: 'auto' } }}>
+                  <Box sx={{
+                    p: 1.5,
+                    borderRadius: '14px',
+                    bgcolor: 'rgba(157, 0, 0, 0.08)',
+                    color: '#9d0000',
+                    display: 'flex'
+                  }}>
+                    <TuneIcon />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#1a1a1a', lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      Registros
+                      <Chip label={filteredSales.length} size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#9d0000', color: '#fff', fontWeight: 900 }} />
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
+                      Control de ingresos
+                    </Typography>
+                  </Box>
+                </Box>
 
-              <TextField
-                id="filter-type-select"
-                select
-                label="Filtrar por"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                sx={{ minWidth: 180 }}
-                size="small"
-                variant="outlined"
-                InputProps={{
-                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
-                }}
-                InputLabelProps={{
-                  sx: { color: '#000000ff' }
-                }}
-              >
-                <MenuItem value="nEmp">Empleado</MenuItem>
-                <MenuItem value="nCli">Cliente</MenuItem>
-                <MenuItem value="nProd">Producto</MenuItem>
-                <MenuItem value="single">Fecha Única</MenuItem>
-              </TextField>
+                <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' }, mx: 1, borderColor: 'rgba(0,0,0,0.06)' }} />
 
-              <TextField
-                id="filter-start-date"
-                type="date"
-                label={filterType === 'single' ? "Fecha" : "Desde"}
-                value={startDate}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val < minDate || val > maxDate) return;
-                  setStartDate(val);
-                }}
-                InputLabelProps={{ shrink: true, sx: { color: '#000000ff' } }}
-                size="small"
-                InputProps={{
-                  inputProps: { min: minDate, max: maxDate },
-                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
-                }}
-              />
-
-              {filterType !== 'single' && (
-                <>
-                  <Typography variant="body2" sx={{ color: '#1a1a1a', fontWeight: 'bold' }}>→</Typography>
+                {/* Filtros de Fecha */}
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  width: '100%',
+                  flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                }}>
                   <TextField
-                    id="filter-end-date"
                     type="date"
-                    label="Hasta"
-                    value={endDate}
+                    label={filterType === 'single' ? "Fecha exacta" : "Desde"}
+                    value={startDate}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val < minDate || val > maxDate) return;
-                      setEndDate(val);
+                      setStartDate(val);
                     }}
-                    InputLabelProps={{ shrink: true, sx: { color: '#000000ff' } }}
                     size="small"
-                    InputProps={{
-                      inputProps: { min: minDate, max: maxDate },
-                      sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      flexGrow: 1,
+                      maxWidth: { md: filterType === 'single' ? '350px' : 'none' },
+                      '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: '#fff' }
                     }}
                   />
-                </>
-              )}
 
-              {['nEmp', 'nCli', 'nProd'].includes(filterType) && (
+                  {filterType !== 'single' && (
+                    <>
+                      <ArrowForwardIcon sx={{ color: '#aaa', display: { xs: 'none', sm: 'block' } }} />
+                      <TextField
+                        type="date"
+                        label="Hasta"
+                        value={endDate}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val < minDate || val > maxDate) return;
+                          setEndDate(val);
+                        }}
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          flexGrow: 1,
+                          '& .MuiOutlinedInput-root': { borderRadius: '14px', bgcolor: '#fff' }
+                        }}
+                      />
+                    </>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Fila Inferior: Criterio y Búsqueda */}
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: 'center'
+              }}>
                 <TextField
-                  id="filter-search-query"
-                  label={
-                    filterType === 'nEmp' ? "Buscar Empleado..." :
-                      filterType === 'nCli' ? "Buscar Cliente..." :
-                        "Buscar Producto..."
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  select
+                  label="Filtrar por"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
                   size="small"
-                  sx={{ minWidth: 280, ml: 'auto', '@media (max-width: 768px)': { ml: 0 } }}
-                  variant="outlined"
-                  InputProps={{
-                    sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 1)', color: '#1a1a1a' }
+                  sx={{
+                    minWidth: { xs: '100%', md: 200 },
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '14px',
+                      bgcolor: '#fff',
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000' }
+                    }
                   }}
-                />
-              )}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FilterListIcon sx={{ color: '#9d0000', fontSize: '1.2rem' }} />
+                      </InputAdornment>
+                    ),
+                    sx: { color: 'black', fontWeight: 500 }
+                  }}
+                >
+                  <MenuItem value="nEmp">Por Empleado</MenuItem>
+                  <MenuItem value="nCli">Por Cliente</MenuItem>
+                  <MenuItem value="nProd">Por Producto</MenuItem>
+                  <MenuItem value="single">Fecha Única</MenuItem>
+                </TextField>
+
+                {['nEmp', 'nCli', 'nProd'].includes(filterType) && (
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder={`Buscar ${filterType === 'nEmp' ? 'empleado' : filterType === 'nCli' ? 'cliente' : 'producto'}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    size="small"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '14px',
+                        bgcolor: '#fff',
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9d0000', borderWidth: '2px' }
+                      }
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: '#aaa' }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchQuery && (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => setSearchQuery('')}>
+                            <CloseIcon sx={{ fontSize: '1rem' }} />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      sx: { color: 'black' }
+                    }}
+                  />
+                )}
+
+                {/* Botón de Limpieza General */}
+                {(searchQuery || filterType !== 'nEmp') && (
+                  <Tooltip title="Restablecer filtros">
+                    <IconButton
+                      onClick={() => {
+                        setSearchQuery('');
+                        setFilterType('nEmp');
+                        const { startStr, endStr } = getDefaultDates();
+                        setStartDate(startStr);
+                        setEndDate(endStr);
+                      }}
+                      sx={{
+                        color: '#9d0000',
+                        bgcolor: 'rgba(157,0,0,0.05)',
+                        '&:hover': { bgcolor: 'rgba(157,0,0,0.1)' },
+                        ml: { md: 'auto' }
+                      }}
+                    >
+                      <ClearAllIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             </Paper>
 
             <Box

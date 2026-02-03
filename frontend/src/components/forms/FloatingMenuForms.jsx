@@ -1,12 +1,17 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Box, TextField, Autocomplete, MenuItem, Typography, Button, IconButton, Badge, Popover, Divider } from '@mui/material';
+import { Box, TextField, Autocomplete, MenuItem, Typography, Button, IconButton, Badge, Popover, Divider, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { validateAndIdentifyPhone } from '../../utils/phoneUtils';
 import { validateNicaraguanCedula, formatCedula, validateEmail } from '../../utils/validationUtils';
+import { IKContext, IKUpload, IKImage } from 'imagekitio-react';
+import { IK_URL_ENDPOINT, IK_PUBLIC_KEY, IK_AUTHENTICATION_ENDPOINT, API_BASE_URL } from '../../utils/config';
+import { resizeImage } from '../../utils/imageUtils';
 
 const getBounds = () => {
     const now = new Date();
@@ -402,6 +407,7 @@ export const VentasForm = memo(({
 
 
 
+
 export const ClientesForm = memo(({ formData, setFormData, isEdit }) => {
     const prefix = isEdit ? 'edit-cliente-' : 'add-cliente-';
     const [phoneStatus, setPhoneStatus] = useState({ isValid: true, carrier: null, error: null, carrierColor: '#757575' });
@@ -451,67 +457,90 @@ export const ClientesForm = memo(({ formData, setFormData, isEdit }) => {
 
     return (
         <>
-            <TextField id={`${prefix}nombres`} label="Nombres" required fullWidth margin="normal" value={formData.nombres || ''} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}apellidos`} label="Apellidos" required fullWidth margin="normal" value={formData.apellidos || ''} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="modern-input" />
-            <TextField
-                id={`${prefix}correo`}
-                label="Correo"
-                required
-                type="email"
-                fullWidth
-                margin="normal"
-                value={formData.correo || ''}
-                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                className="modern-input"
-                error={!!emailStatus.error && formData.correo?.length > 0}
-                helperText={!!emailStatus.error && formData.correo?.length > 0 ? emailStatus.error : ""}
-            />
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>INFORMACIÓN PERSONAL</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}nombres`} label="Nombres" required fullWidth value={formData.nombres || ''} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}apellidos`} label="Apellidos" required fullWidth value={formData.apellidos || ''} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="modern-input" />
+                </Grid>
 
-            <TextField
-                id={`${prefix}telefono`}
-                label="Teléfono"
-                required
-                fullWidth
-                margin="normal"
-                value={formData.telefono || ''}
-                onChange={handlePhoneChange}
-                className="modern-input"
-                error={!!phoneStatus.error && formData.telefono?.length > 0}
-                helperText={
-                    <span style={{ display: 'block' }}>
-                        {!!phoneStatus.error && formData.telefono?.length > 0 && (
-                            <span style={{ color: '#d32f2f', display: 'block', marginBottom: '2px' }}>{phoneStatus.error}</span>
-                        )}
-                        {phoneStatus.carrier && (
-                            <span style={{ color: phoneStatus.carrierColor, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                {phoneStatus.carrierLogo && (
-                                    <img
-                                        src={phoneStatus.carrierLogo}
-                                        alt="Carrier"
-                                        style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                                    />
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>IDENTIFICACIÓN Y CONTACTO</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        id={`${prefix}cedula`}
+                        label="Número Cédula"
+                        required
+                        fullWidth
+                        value={formData.numCedula || ''}
+                        onChange={handleCedulaChange}
+                        className="modern-input"
+                        error={!!cedulaStatus.error && formData.numCedula?.length > 10}
+                        helperText={!!cedulaStatus.error && formData.numCedula?.length > 10 ? cedulaStatus.error : "Formato: 001-000000-0000X"}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        id={`${prefix}telefono`}
+                        label="Teléfono"
+                        required
+                        fullWidth
+                        value={formData.telefono || ''}
+                        onChange={handlePhoneChange}
+                        className="modern-input"
+                        error={!!phoneStatus.error && formData.telefono?.length > 0}
+                        helperText={
+                            <span style={{ display: 'block' }}>
+                                {!!phoneStatus.error && formData.telefono?.length > 0 && (
+                                    <span style={{ color: '#d32f2f', display: 'block', marginBottom: '2px' }}>{phoneStatus.error}</span>
                                 )}
-                                {phoneStatus.carrier}
+                                {phoneStatus.carrier && (
+                                    <span style={{ color: phoneStatus.carrierColor, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        {phoneStatus.carrierLogo && (
+                                            <img
+                                                src={phoneStatus.carrierLogo}
+                                                alt="Carrier"
+                                                style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                            />
+                                        )}
+                                        {phoneStatus.carrier}
+                                    </span>
+                                )}
                             </span>
-                        )}
-                    </span>
-                }
-            />
+                        }
+                    />
+                </Grid>
 
-            <TextField id={`${prefix}fecha`} label="Fecha Registro" required type="date" fullWidth margin="normal" value={formData.fechaRegistro || ''} onChange={(e) => setFormData({ ...formData, fechaRegistro: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
-            <TextField
-                id={`${prefix}cedula`}
-                label="Número Cédula"
-                required
-                fullWidth
-                margin="normal"
-                value={formData.numCedula || ''}
-                onChange={handleCedulaChange}
-                className="modern-input"
-                error={!!cedulaStatus.error && formData.numCedula?.length > 10}
-                helperText={!!cedulaStatus.error && formData.numCedula?.length > 10 ? cedulaStatus.error : "Formato: 001-000000-0000X"}
-            />
-            <TextField id={`${prefix}direccion`} label="Dirección" required fullWidth margin="normal" value={formData.direccion || ''} onChange={(e) => setFormData({ ...formData, direccion: e.target.value })} className="modern-input" />
+                <Grid item xs={12} sm={7}>
+                    <TextField
+                        id={`${prefix}correo`}
+                        label="Correo"
+                        required
+                        type="email"
+                        fullWidth
+                        value={formData.correo || ''}
+                        onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+                        className="modern-input"
+                        error={!!emailStatus.error && formData.correo?.length > 0}
+                        helperText={!!emailStatus.error && formData.correo?.length > 0 ? emailStatus.error : ""}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={5}>
+                    <TextField id={`${prefix}fecha`} label="Fecha Registro" required type="date" fullWidth value={formData.fechaRegistro || ''} onChange={(e) => setFormData({ ...formData, fechaRegistro: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>DIRECCIÓN</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField id={`${prefix}direccion`} label="Dirección" required fullWidth value={formData.direccion || ''} onChange={(e) => setFormData({ ...formData, direccion: e.target.value })} className="modern-input" />
+                </Grid>
+            </Grid>
         </>
     );
 });
@@ -520,34 +549,81 @@ export const EmpleadosForm = memo(({ formData, setFormData, isEdit, supervisores
     const prefix = isEdit ? 'edit-empleado-' : 'add-empleado-';
     return (
         <>
-            <TextField id={`${prefix}nombres`} label="Nombres" required fullWidth margin="normal" value={formData.nombres || ''} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}apellidos`} label="Apellidos" required fullWidth margin="normal" value={formData.apellidos || ''} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}estado-civil`} label="Estado Civil" required fullWidth margin="normal" value={formData.estadoCivil || ''} onChange={(e) => setFormData({ ...formData, estadoCivil: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}sexo`} label="Sexo" required fullWidth margin="normal" value={formData.sexo || ''} onChange={(e) => setFormData({ ...formData, sexo: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}nacimiento`} label="Fecha de Nacimiento" required type="date" fullWidth margin="normal" value={formData.fechaDeNacimiento || ''} onChange={(e) => setFormData({ ...formData, fechaDeNacimiento: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
-            <TextField id={`${prefix}inicio`} label="Fecha de Inicio Contrato" required type="date" fullWidth margin="normal" value={formData.fechaDeInicioContrato || ''} onChange={(e) => setFormData({ ...formData, fechaDeInicioContrato: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
-            <TextField id={`${prefix}fin`} label="Fecha de Fin Contrato" required type="date" fullWidth margin="normal" value={formData.fechaDeFinContrato || ''} onChange={(e) => setFormData({ ...formData, fechaDeFinContrato: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
-            <TextField id={`${prefix}ruc`} label="RUC" required fullWidth margin="normal" value={formData.ruc || ''} onChange={(e) => setFormData({ ...formData, ruc: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}cedula`} label="Número Cédula" required fullWidth margin="normal" value={formData.numCedula || ''} onChange={(e) => setFormData({ ...formData, numCedula: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}inss`} label="Número INSS" required fullWidth margin="normal" value={formData.numInss || ''} onChange={(e) => setFormData({ ...formData, numInss: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}estado`} label="Estado" required fullWidth margin="normal" value={formData.estado || ''} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} className="modern-input" />
-            <TextField id={`${prefix}sector`} label="Sector" required fullWidth margin="normal" value={formData.sector || ''} onChange={(e) => setFormData({ ...formData, sector: e.target.value })} className="modern-input" />
-            {supervisores && (
-                <Autocomplete
-                    id={`${prefix}supervisor-select`}
-                    fullWidth
-                    disablePortal
-                    options={supervisores}
-                    getOptionLabel={(option) => `${option.nombres} ${option.apellidos}`}
-                    value={selectedSupervisor}
-                    onChange={(event, newValue) => {
-                        setSelectedSupervisor(newValue);
-                        setFormData(prev => ({ ...prev, supervisor: newValue ? newValue.id : null, Supervisor: newValue ? newValue.id : null }));
-                    }}
-                    renderInput={(params) => <TextField {...params} label="Supervisor" margin="normal" fullWidth className="modern-input" />}
-                />
-            )}
-            <TextField id={`${prefix}salario`} label="Salario Base" required type="number" fullWidth margin="normal" value={formData.salarioBase || ''} onChange={(e) => setFormData({ ...formData, salarioBase: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+            <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}nombres`} label="Nombres" required fullWidth value={formData.nombres || ''} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}apellidos`} label="Apellidos" required fullWidth value={formData.apellidos || ''} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>DOCUMENTOS LEGALES</Typography>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}cedula`} label="Número Cédula" required fullWidth value={formData.numCedula || ''} onChange={(e) => setFormData({ ...formData, numCedula: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}ruc`} label="RUC" required fullWidth value={formData.ruc || ''} onChange={(e) => setFormData({ ...formData, ruc: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}inss`} label="Número INSS" required fullWidth value={formData.numInss || ''} onChange={(e) => setFormData({ ...formData, numInss: e.target.value })} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>INFORMACIÓN PERSONAL</Typography>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}estado-civil`} label="Estado Civil" required fullWidth value={formData.estadoCivil || ''} onChange={(e) => setFormData({ ...formData, estadoCivil: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}sexo`} label="Sexo" required fullWidth value={formData.sexo || ''} onChange={(e) => setFormData({ ...formData, sexo: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <TextField id={`${prefix}nacimiento`} label="Fecha Nacimiento" required type="date" fullWidth value={formData.fechaDeNacimiento || ''} onChange={(e) => setFormData({ ...formData, fechaDeNacimiento: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>CONTRATO Y LABORAL</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}inicio`} label="Fecha Inicio Contrato" required type="date" fullWidth value={formData.fechaDeInicioContrato || ''} onChange={(e) => setFormData({ ...formData, fechaDeInicioContrato: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}fin`} label="Fecha Fin Contrato" required type="date" fullWidth value={formData.fechaDeFinContrato || ''} onChange={(e) => setFormData({ ...formData, fechaDeFinContrato: e.target.value })} InputLabelProps={{ shrink: true }} inputProps={getBounds()} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}sector`} label="Sector" required fullWidth value={formData.sector || ''} onChange={(e) => setFormData({ ...formData, sector: e.target.value })} className="modern-input" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField id={`${prefix}estado`} label="Estado" required fullWidth value={formData.estado || ''} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} className="modern-input" />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#666', mb: 1, mt: 1 }}>SALARIO Y SUPERVISIÓN</Typography>
+                </Grid>
+                <Grid item xs={12} sm={supervisores ? 6 : 12}>
+                    <TextField id={`${prefix}salario`} label="Salario Base" required type="number" fullWidth value={formData.salarioBase || ''} onChange={(e) => setFormData({ ...formData, salarioBase: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+                </Grid>
+                {supervisores && (
+                    <Grid item xs={12} sm={6}>
+                        <Autocomplete
+                            id={`${prefix}supervisor-select`}
+                            fullWidth
+                            disablePortal
+                            options={supervisores}
+                            getOptionLabel={(option) => `${option.nombres} ${option.apellidos}`}
+                            value={selectedSupervisor}
+                            onChange={(event, newValue) => {
+                                setSelectedSupervisor(newValue);
+                                setFormData(prev => ({ ...prev, supervisor: newValue ? newValue.id : null, Supervisor: newValue ? newValue.id : null }));
+                            }}
+                            renderInput={(params) => <TextField {...params} label="Supervisor" fullWidth className="modern-input" />}
+                        />
+                    </Grid>
+                )}
+            </Grid>
         </>
     );
 });
@@ -577,27 +653,466 @@ export const ComprasForm = memo(({ formData, setFormData, isEdit, proveedores, s
 
 export const InventarioForm = memo(({ formData, setFormData, isEdit }) => {
     const prefix = isEdit ? 'edit-inv-' : 'add-inv-';
+    const [originalImageUrl] = useState(isEdit ? formData.imagen_url : null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
+    // Ref para rastrear si hemos subido algo en ESTA sesión del formulario
+    // para evitar dejar "zombies" si el usuario sube varias fotos antes de guardar
+    const sessionUploadUrlRef = useRef(null);
+
+    const deleteFromIK = async (url) => {
+        if (!url || !url.includes('ik.imagekit.io')) return;
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+            const token = user?.token || localStorage.getItem('token') || sessionStorage.getItem('token');
+            await fetch(`${API_BASE_URL}/imagekit/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ url })
+            });
+        } catch (error) {
+            console.error("Error al intentar borrar de ImageKit:", error);
+        }
+    };
+
+    // Efecto de limpieza al desmontar: si NO se guardó, borrar imagen huérfana
+    useEffect(() => {
+        return () => {
+            if (sessionUploadUrlRef.current) {
+                const urlToDelete = sessionUploadUrlRef.current;
+                // Extraer el nombre del archivo para una comparación segura
+                const fileNameToDelete = urlToDelete.split('/').pop().split('?')[0];
+
+                setTimeout(() => {
+                    const savedPath = window._preventDeleteUrl;
+                    const savedFileName = savedPath?.split('/').pop().split('?')[0];
+
+                    // Solo borrar si el archivo no coincide con lo que se acaba de guardar
+                    if (savedFileName !== fileNameToDelete) {
+                        deleteFromIK(urlToDelete);
+                    }
+                }, 2000);
+            }
+        };
+    }, []);
+
+    const onError = err => {
+        setIsUploading(false);
+        setUploadError(err.message || "Error al subir la imagen");
+        console.error("Error de subida:", err);
+    };
+
+    const onSuccess = res => {
+        setIsUploading(false);
+        setUploadError(null);
+        const serverUrl = res.url;
+        const cleanPath = res.filePath;
+
+        // Si ya habíamos subido una imagen en esta sesión, la borramos para no acumular
+        if (sessionUploadUrlRef.current && sessionUploadUrlRef.current !== serverUrl) {
+            deleteFromIK(sessionUploadUrlRef.current);
+        }
+        sessionUploadUrlRef.current = serverUrl;
+
+        setFormData(prev => ({
+            ...prev,
+            imagen_url: serverUrl, // Actualizar a la URL del servidor directamente para mayor estabilidad
+            imagen_path_server: cleanPath
+        }));
+    };
+
+    // Determinar estados de imagen
+    const hasOriginal = isEdit && originalImageUrl;
+    const isNewImage = isEdit && formData.imagen_url && formData.imagen_url !== originalImageUrl;
+    const noImage = !formData.imagen_url;
+
+    const authenticator = async () => {
+        setUploadError(null);
+        try {
+            const response = await fetch(IK_AUTHENTICATION_ENDPOINT);
+            if (!response.ok) throw new Error(`Error de autenticación (${response.status})`);
+            const data = await response.json();
+            return { signature: data.signature, expire: data.expire, token: data.token };
+        } catch (error) {
+            setUploadError("Error al conectar con el servidor de seguridad");
+            throw error;
+        }
+    };
+
+    const handleCustomUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const localUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, imagen_url: localUrl }));
+
+        setIsUploading(true);
+        setUploadError(null);
+
+        try {
+            const resizedFile = await resizeImage(file, 2000, 2000);
+            const { signature, expire, token } = await authenticator();
+
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', resizedFile);
+            formDataUpload.append('fileName', `prod_${Date.now()}.${file.name.split('.').pop()}`);
+            formDataUpload.append('useUniqueFileName', 'true');
+            formDataUpload.append('folder', '/Productos');
+            formDataUpload.append('publicKey', IK_PUBLIC_KEY);
+            formDataUpload.append('signature', signature);
+            formDataUpload.append('expire', expire);
+            formDataUpload.append('token', token);
+
+            const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+                method: 'POST',
+                body: formDataUpload
+            });
+
+            if (!uploadRes.ok) {
+                const errText = await uploadRes.text();
+                throw new Error(`Error subida: ${errText}`);
+            }
+
+            const data = await uploadRes.json();
+            onSuccess(data);
+
+        } catch (err) {
+            console.error("Error en Custom Upload:", err);
+            onError(err);
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
+
+    const removeImage = () => {
+        // Solo borrar de ImageKit si es una imagen nueva subida EN ESTA sesión
+        // No queremos borrar la imagen original que ya estaba en la DB si el usuario cancela
+        if (formData.imagen_url && formData.imagen_url.includes('ik.imagekit.io')) {
+            // Verificamos si la imagen actual es la que acabamos de subir en esta sesión
+            const currentFileName = formData.imagen_url.split('/').pop().split('?')[0];
+            const sessionFileName = sessionUploadUrlRef.current?.split('/').pop().split('?')[0];
+
+            if (currentFileName === sessionFileName) {
+                deleteFromIK(formData.imagen_url);
+                sessionUploadUrlRef.current = null;
+            }
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            imagen_url: isEdit ? originalImageUrl : null,
+            imagen_path_server: isEdit ? originalImageUrl : null // Restaurar original
+        }));
+    };
+
     return (
         <>
-            <TextField id={`${prefix}nombre`} label="Nombre" required fullWidth margin="normal" value={formData.nombre || ''} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="modern-input" />
-            <TextField
-                id={`${prefix}tipo-paquete`}
-                select
-                label="Tipo Paquete"
-                fullWidth
-                margin="normal"
-                value={formData.tipoPaquete || 6}
-                onChange={(e) => setFormData({ ...formData, tipoPaquete: e.target.value })}
-                className="modern-input"
-            >
-                {[6, 8, 12, 24].map((option) => (
-                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                ))}
-            </TextField>
-            <TextField id={`${prefix}paquetes`} label="Cantidad Paquetes" type="number" fullWidth margin="normal" value={formData.cantidadPaquetes || ''} onChange={(e) => setFormData({ ...formData, cantidadPaquetes: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
-            <TextField id={`${prefix}unidades`} label="Cantidad Unidades" type="number" fullWidth margin="normal" value={formData.cantidadUnidades || ''} onChange={(e) => setFormData({ ...formData, cantidadUnidades: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
-            <TextField id={`${prefix}precio-venta`} label="Precio Venta Paquete" type="number" fullWidth margin="normal" value={formData.precioVenta_Paq || ''} onChange={(e) => setFormData({ ...formData, precioVenta_Paq: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
-            <TextField id={`${prefix}precio-compra`} label="Precio Compra Paquete" type="number" fullWidth margin="normal" value={formData.precioCompra_Paq || ''} onChange={(e) => setFormData({ ...formData, precioCompra_Paq: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+            {/* Sección de Imagen */}
+            <Box sx={{ mt: 2, mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, opacity: 0.9 }}>
+                    <CameraAltIcon sx={{ color: '#610c0c', fontSize: '1.2rem' }} />
+                    Imagen del Producto
+                </Typography>
+                {/* ... (rest of image logic remains same, just better margins) ... */}
+                <IKContext
+                    urlEndpoint={IK_URL_ENDPOINT}
+                    publicKey={IK_PUBLIC_KEY}
+                    authenticator={authenticator}
+                >
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        p: 2,
+                        border: '1px dashed rgba(255,255,255,0.15)',
+                        borderRadius: '16px',
+                        background: 'rgba(255,255,255,0.02)',
+                        minHeight: '120px',
+                        justifyContent: 'center'
+                    }}>
+
+                        {/* MODO EDICIÓN: Mostrar comparativa o estado actual */}
+                        {isEdit ? (
+                            <Box sx={{
+                                display: 'flex',
+                                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                                gap: 3,
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                {/* Imagen Original / Anterior */}
+                                {hasOriginal && (
+                                    <Box sx={{ textAlign: 'center', flex: '1 1 auto', maxWidth: '250px' }}>
+                                        <Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.6 }}>Imagen Anterior</Typography>
+                                        <Box sx={{ p: 0.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <img
+                                                src={originalImageUrl?.startsWith('http') || originalImageUrl?.startsWith('blob:')
+                                                    ? originalImageUrl
+                                                    : `https://ik.imagekit.io/gpb4w57ui/${originalImageUrl?.replace(/^\//, '')}`
+                                                }
+                                                alt="Anterior"
+                                                style={{
+                                                    borderRadius: '6px',
+                                                    objectFit: 'contain',
+                                                    maxWidth: '250px',
+                                                    maxHeight: '250px',
+                                                    width: '100%',
+                                                    height: 'auto',
+                                                    display: 'block',
+                                                    margin: '0 auto',
+                                                    opacity: isNewImage ? 0.5 : 1,
+                                                    background: 'rgba(0,0,0,0.05)'
+                                                }}
+                                                onError={(e) => {
+                                                    const img = e.target;
+                                                    console.error("FALLO CARGA IMAGEN ANTERIOR:", img.src);
+                                                    if (!img.src.includes('retry=')) {
+                                                        setTimeout(() => {
+                                                            const base = img.src.split('?')[0];
+                                                            img.src = `${base}?retry=${Date.now()}`;
+                                                        }, 2000);
+                                                    }
+                                                }}
+                                            />
+                                        </Box>
+                                    </Box>
+                                )}
+
+                                {/* Nueva Imagen Seleccionada */}
+                                {isNewImage ? (
+                                    <Box sx={{ textAlign: 'center', position: 'relative', animation: 'fadeIn 0.3s ease', flex: '1 1 auto', maxWidth: '250px' }}>
+                                        <Typography variant="caption" sx={{ display: 'block', mb: 0.5, color: '#4caf50', fontWeight: 'bold' }}>Nueva Imagen</Typography>
+                                        <Box sx={{ p: 0.5, bgcolor: 'rgba(76, 175, 80, 0.1)', borderRadius: '10px', border: '2px solid #4caf50' }}>
+                                            <img
+                                                src={formData.imagen_url?.startsWith('http') || formData.imagen_url?.startsWith('blob:')
+                                                    ? formData.imagen_url
+                                                    : `https://ik.imagekit.io/gpb4w57ui/${formData.imagen_url?.replace(/^\//, '')}`
+                                                }
+                                                alt="Nueva"
+                                                style={{
+                                                    borderRadius: '6px',
+                                                    objectFit: 'contain',
+                                                    maxWidth: '250px',
+                                                    maxHeight: '250px',
+                                                    width: '100%',
+                                                    height: 'auto',
+                                                    display: 'block',
+                                                    margin: '0 auto',
+                                                    background: 'rgba(0,0,0,0.05)'
+                                                }}
+                                                onError={(e) => {
+                                                    const img = e.target;
+                                                    console.error("FALLO CARGA NUEVA IMAGEN:", img.src);
+                                                    if (!img.src.includes('retry=')) {
+                                                        setTimeout(() => {
+                                                            const base = img.src.split('?')[0];
+                                                            img.src = `${base}?retry=${Date.now()}`;
+                                                        }, 1500);
+                                                    }
+                                                }}
+                                            />
+                                            <IconButton
+                                                size="small"
+                                                onClick={removeImage}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 15,
+                                                    right: -10,
+                                                    bgcolor: '#d32f2f',
+                                                    color: 'white',
+                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                                    '&:hover': { bgcolor: '#b31818' }
+                                                }}
+                                            >
+                                                <DeleteIcon fontSize="inherit" />
+                                            </IconButton>
+                                        </Box>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '300px' }}>
+                                        {noImage ? (
+                                            <Box sx={{
+                                                textAlign: 'center',
+                                                p: 3,
+                                                width: '100%',
+                                                borderRadius: '12px',
+                                                bgcolor: 'rgba(255,255,255,0.03)',
+                                                border: '1px dashed rgba(255,255,255,0.1)',
+                                                position: 'relative',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                minHeight: '120px',
+                                                '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' }
+                                            }}>
+                                                <CloudUploadIcon sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleCustomUpload}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        opacity: 0,
+                                                        cursor: 'pointer',
+                                                        zIndex: 10
+                                                    }}
+                                                />
+                                                <Typography variant="body2" sx={{ opacity: 0.7 }}>Pulsa para cambiar foto</Typography>
+                                            </Box>
+                                        ) : !isNewImage && (
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<EditIcon />}
+                                                onClick={() => setFormData(prev => ({ ...prev, imagen_url: null }))}
+                                                sx={{ borderRadius: '20px', textTransform: 'none', borderColor: 'rgba(255,255,255,0.2)' }}
+                                            >
+                                                Cambiar Imagen
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        ) : (
+                            /* MODO AGREGAR: Vista previa simple */
+                            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                {formData.imagen_url ? (
+                                    <Box sx={{ position: 'relative' }}>
+                                        <img
+                                            src={formData.imagen_url?.startsWith('http') || formData.imagen_url?.startsWith('blob:')
+                                                ? formData.imagen_url
+                                                : `https://ik.imagekit.io/gpb4w57ui/${formData.imagen_url?.replace(/^\//, '')}`
+                                            }
+                                            alt="Vista previa"
+                                            style={{
+                                                borderRadius: '12px',
+                                                maxWidth: '100%',
+                                                maxHeight: '250px',
+                                                width: 'auto',
+                                                height: 'auto',
+                                                display: 'block',
+                                                margin: '0 auto',
+                                                objectFit: 'contain',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                background: 'rgba(0,0,0,0.1)'
+                                            }}
+                                            onError={(e) => {
+                                                const img = e.target;
+                                                if (!img.src.includes('retry=')) {
+                                                    setTimeout(() => {
+                                                        const base = img.src.split('?')[0];
+                                                        img.src = `${base}?retry=${Date.now()}`;
+                                                    }, 1500);
+                                                }
+                                            }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            onClick={removeImage}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: -10,
+                                                right: -10,
+                                                bgcolor: '#d32f2f',
+                                                color: 'white',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                                                '&:hover': { bgcolor: '#b31818' }
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{
+                                        textAlign: 'center',
+                                        p: 4,
+                                        width: '100%',
+                                        borderRadius: '16px',
+                                        bgcolor: 'rgba(255,255,255,0.03)',
+                                        border: '2px dashed rgba(255,255,255,0.1)',
+                                        position: 'relative',
+                                        transition: 'all 0.2s ease',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        minHeight: '200px',
+                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', transform: 'scale(1.02)' }
+                                    }}
+                                    >
+                                        {isUploading ? (
+                                            <Typography variant="body2" sx={{ opacity: 0.6 }}>Subiendo archivo...</Typography>
+                                        ) : (
+                                            <>
+                                                <CloudUploadIcon sx={{ fontSize: 50, mb: 1, opacity: 0.4 }} />
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleCustomUpload}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        opacity: 0,
+                                                        cursor: 'pointer',
+                                                        zIndex: 10
+                                                    }}
+                                                />
+                                                <Typography variant="body1" sx={{ fontWeight: 600, opacity: 0.8 }}>Pulsa para subir foto</Typography>
+                                                <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.4 }}>Formatos aceptados: JPG, PNG, WEBP</Typography>
+                                            </>
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        )}
+                    </Box>
+                </IKContext>
+                {uploadError && (
+                    <Typography variant="caption" sx={{ color: '#ff1744', display: 'block', mt: 1, textAlign: 'center', fontWeight: 'bold' }}>
+                        {uploadError}
+                    </Typography>
+                )}
+            </Box>
+
+            <TextField id={`${prefix}nombre`} label="Nombre del Producto" required fullWidth margin="normal" value={formData.nombre || ''} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="modern-input" />
+
+            {/* Fila de Stock: Tipo, Paquetes, Unidades */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2, mb: 1 }}>
+                <TextField
+                    id={`${prefix}tipo-paquete`}
+                    select
+                    label="Tipo Paquete"
+                    fullWidth
+                    margin="normal"
+                    value={formData.tipoPaquete || 6}
+                    onChange={(e) => setFormData({ ...formData, tipoPaquete: e.target.value })}
+                    className="modern-input"
+                >
+                    {[6, 8, 12, 24].map((option) => (
+                        <MenuItem key={option} value={option}>{option} unidades</MenuItem>
+                    ))}
+                </TextField>
+                <TextField id={`${prefix}paquetes`} label="Cant. Paquetes" type="number" fullWidth margin="normal" value={formData.cantidadPaquetes || ''} onChange={(e) => setFormData({ ...formData, cantidadPaquetes: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+                <TextField id={`${prefix}unidades`} label="Cant. Unidades" type="number" fullWidth margin="normal" value={formData.cantidadUnidades || ''} onChange={(e) => setFormData({ ...formData, cantidadUnidades: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+            </Box>
+
+            {/* Fila de Precios: Venta, Compra */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                <TextField id={`${prefix}precio-venta`} label="Precio Venta (Paq)" type="number" fullWidth margin="normal" value={formData.precioVenta_Paq || ''} onChange={(e) => setFormData({ ...formData, precioVenta_Paq: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+                <TextField id={`${prefix}precio-compra`} label="Precio Compra (Paq)" type="number" fullWidth margin="normal" value={formData.precioCompra_Paq || ''} onChange={(e) => setFormData({ ...formData, precioCompra_Paq: e.target.value })} onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()} inputProps={{ min: 0 }} className="modern-input" />
+            </Box>
         </>
     );
 });

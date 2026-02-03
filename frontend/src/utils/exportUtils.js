@@ -30,9 +30,21 @@ const actionButtonsFilter = (node) => {
  * Captura un elemento con dimensiones precisas y resolución optimizada para estabilidad.
  */
 const getCaptureOptions = (node) => {
-    // Usamos el tamaño real del contenido. Math.ceil evita bordes blancos por subpíxeles.
-    const totalWidth = Math.ceil(node.scrollWidth);
-    const totalHeight = Math.ceil(node.scrollHeight);
+    // 1. Intentar detectar el ancho real del contenido analizando contenedores internos de scroll
+    // Esto es vital para gráficos que tienen scroll horizontal (muchos días en el eje X)
+    let scrollWidth = node.scrollWidth;
+    let scrollHeight = node.scrollHeight;
+
+    const internalScroll = node.querySelector('.native-chart-scroll-container, .ai-table-scroll-container');
+    if (internalScroll) {
+        // El ancho real es el scrollWidth del contenedor interno, 
+        // más los paddings laterales del nodo principal (gap de seguridad de 20px)
+        scrollWidth = Math.max(scrollWidth, internalScroll.scrollWidth + 32);
+    }
+
+    // Usamos el tamaño real detectado. Math.ceil evita bordes blancos por subpíxeles.
+    const totalWidth = Math.ceil(scrollWidth);
+    const totalHeight = Math.ceil(scrollHeight);
 
     // Ajustamos el pixelRatio para evitar bloqueos del navegador (Pantalla Negra)
     // En móviles limitamos a 2 para mayor estabilidad. En desktop podemos subir a 2.5 si no es gigante.
@@ -40,9 +52,9 @@ const getCaptureOptions = (node) => {
     let pixelRatio = isMobile ? 2 : (window.devicePixelRatio || 2);
 
     const maxDimension = Math.max(totalWidth, totalHeight);
-    if (maxDimension > 3000) {
+    if (maxDimension > 4000) {
         pixelRatio = 1.0;
-    } else if (maxDimension > 1500 && !isMobile) {
+    } else if (maxDimension > 2000 && !isMobile) {
         pixelRatio = 1.5;
     }
 
@@ -72,32 +84,46 @@ const getCaptureOptions = (node) => {
         },
         onClone: (clonedNode) => {
             try {
-                // Función helper para expandir
+                // Función helper para expandir contenedores
                 const expand = (el) => {
                     el.style.overflow = 'visible';
-                    el.style.width = 'auto';
+                    el.style.width = 'fit-content';
+                    el.style.minWidth = '100%';
                     el.style.height = 'auto';
                     el.style.maxWidth = 'none';
                     el.style.maxHeight = 'none';
+                    el.style.display = 'block';
                 };
 
-                // 1. Si el mismo nodo es el contenedor de scroll
-                if (clonedNode.classList && clonedNode.classList.contains('native-chart-scroll-container')) {
-                    expand(clonedNode);
-                }
+                // 1. Expandir contenedores de scroll conocidos
+                const scrolls = clonedNode.querySelectorAll('.native-chart-scroll-container, .ai-table-scroll-container, .mermaid-container');
+                scrolls.forEach(expand);
 
-                // 2. Buscar hijos contenedores de scroll
-                if (clonedNode.querySelectorAll) {
-                    const scrolls = clonedNode.querySelectorAll('.native-chart-scroll-container');
-                    scrolls.forEach(expand);
-                }
+                // 2. Forzar que los SVGs (Mermaid/Recharts) tomen el ancho de su nuevo padre expandido
+                const svgs = clonedNode.querySelectorAll('svg');
+                svgs.forEach(svg => {
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                    svg.style.maxWidth = 'none';
+                    // Si es Recharts, a veces el width/height están en atributos
+                    if (svg.parentElement.classList.contains('recharts-wrapper')) {
+                        svg.setAttribute('width', '100%');
+                    }
+                });
 
-                // 3. Forzar wrapper principal también
-                if (clonedNode.classList && clonedNode.classList.contains('native-chart-wrapper')) {
+                // 3. Manejar específicamente Recharts ResponsiveContainer
+                const rechartsWrappers = clonedNode.querySelectorAll('.recharts-responsive-container');
+                rechartsWrappers.forEach(wrap => {
+                    wrap.style.width = '100%';
+                    wrap.style.height = '300px'; // Altura estándar para exportación
+                });
+
+                // 4. Asegurar que el propio nodo clonado esté expandido si es un wrapper
+                if (clonedNode.classList && (clonedNode.classList.contains('native-chart-wrapper') || clonedNode.classList.contains('mermaid-container'))) {
                     expand(clonedNode);
                 }
             } catch (e) {
-                // Silencioso
+                console.warn("Error en onClone expansion:", e);
             }
         }
     };
@@ -641,7 +667,13 @@ export const copyMessageToClipboard = async (markdownText, messageElement = null
             const trimmed = seg.trim();
             if (trimmed.startsWith('```')) {
                 const lang = trimmed.slice(3).toLowerCase();
-                if (lang.includes('mermaid') || lang.includes('json')) {
+                // Solo procesamos como visuales los bloques que realmente se renderizan como tales
+                const isChart = lang.includes('mermaid') ||
+                    trimmed.includes('"chartType"') ||
+                    trimmed.includes('"graph"') ||
+                    trimmed.includes('"diagramType"');
+
+                if (isChart && (lang.includes('mermaid') || lang.includes('json'))) {
                     let extractedTitle = "";
                     if (lang.includes('json')) {
                         const match = trimmed.match(/"title"\s*:\s*"([^"]+)"/i);
@@ -655,8 +687,8 @@ export const copyMessageToClipboard = async (markdownText, messageElement = null
                         }
                         htmlContent += `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; mso-table-tspace: 0pt; mso-table-bspace: 0pt;"><tr><td align="center" style="text-align: center; border: none; line-height: 1pt; font-size: 1pt;"><img src="${visualImages[visualIdx]}" width="600" style="display: block; margin: 0 auto;" /></td></tr></table>`;
                     }
+                    visualIdx++; // Incrementar SOLO si era un gráfico
                 }
-                visualIdx++;
                 return;
             }
 
@@ -814,17 +846,24 @@ export const exportToWord = async (markdownText, messageElement = null) => {
             if (trimmedLine.startsWith('```')) {
                 if (!isInsideVisualBlock) {
                     const lang = trimmedLine.slice(3).toLowerCase();
-                    if (lang === 'mermaid' || lang === 'json') {
+                    // Obtener contenido del bloque para validación
+                    let blockLines = [];
+                    for (let j = i + 1; j < lines.length; j++) {
+                        if (lines[j].trim().startsWith('```')) break;
+                        blockLines.push(lines[j]);
+                    }
+                    const blockContent = blockLines.join('\n');
+
+                    const isChart = lang.includes('mermaid') ||
+                        blockContent.includes('"chartType"') ||
+                        blockContent.includes('"graph"') ||
+                        blockContent.includes('"diagramType"');
+
+                    if (isChart && (lang === 'mermaid' || lang === 'json')) {
                         isInsideVisualBlock = true;
 
                         let extractedTitle = "";
                         if (lang === 'json') {
-                            let blockLines = [];
-                            for (let j = i + 1; j < lines.length; j++) {
-                                if (lines[j].trim().startsWith('```')) break;
-                                blockLines.push(lines[j]);
-                            }
-                            const blockContent = blockLines.join('\n');
                             try {
                                 const parsed = JSON.parse(blockContent);
                                 if (parsed.title) extractedTitle = parsed.title;
@@ -868,7 +907,10 @@ export const exportToWord = async (markdownText, messageElement = null) => {
                             }));
                         }
                         visualPointer++;
-                    } else { isInsideVisualBlock = true; }
+                    } else {
+                        // Es un bloque de código normal, lo marcamos para saltar sus líneas pero no incrementamos visualPointer
+                        isInsideVisualBlock = true;
+                    }
                 } else { isInsideVisualBlock = false; }
                 continue;
             }

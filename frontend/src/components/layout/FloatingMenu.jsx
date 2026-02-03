@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   Button, useMediaQuery, useTheme, Typography,
-  Collapse, Tooltip, Slide, Zoom
+  Collapse, Tooltip, Slide, Zoom, IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AddIcon from '@mui/icons-material/Add';
@@ -179,6 +180,7 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
             cantidadPaquetes: parseInt(formData.cantidadPaquetes) || 0,
             precioVenta_Paq: parseFloat(formData.precioVenta_Paq) || 0,
             precioCompra_Paq: parseFloat(formData.precioCompra_Paq) || 0,
+            imagen_url: formData.imagen_path_server || formData.imagen_url || '',
             userId: currentUser.id,
             username: currentUser.username
           };
@@ -277,6 +279,30 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
               throw new Error('Venta guardada pero error al guardar detalles');
             }
           }
+        }
+
+        // Borrar imagen antigua de ImageKit si se editó el inventario y cambió la foto
+        if (path === '/inventario' && isEdit) {
+          const oldImageUrl = selectedItem?.imagen_url;
+          const newImageUrl = data.imagen_url;
+
+          if (oldImageUrl && oldImageUrl !== newImageUrl && oldImageUrl.includes('ik.imagekit.io')) {
+            fetch(`${API_BASE_URL}/imagekit/delete`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ url: oldImageUrl })
+            }).catch(err => console.error("Error al borrar imagen antigua:", err));
+          }
+        }
+
+        if (path === '/inventario') {
+          // Marcamos la URL de la imagen como "guardada" para que el componente InventarioForm
+          // no la borre al desmontarse (limpieza de cancelados)
+          window._preventDeleteUrl = data.imagen_url;
+          setTimeout(() => { delete window._preventDeleteUrl; }, 5000);
         }
 
         setModalOpen(false);
@@ -475,8 +501,10 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
       <Dialog
         open={modalOpen}
         onClose={handleCloseModal}
+        sx={{ margin: '10px' }}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
+        fullScreen={isMobile}
         PaperProps={{ className: 'custom-modal-paper' }}
         TransitionComponent={Transition}
         TransitionProps={{
@@ -491,6 +519,11 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
         <DialogTitle className="modal-title">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="inherit">Agregar {addButtonText?.replace('Agregar ', '')}</Typography>
+            {isMobile && (
+              <IconButton onClick={handleCloseModal} size="small" sx={{ color: 'inherit' }}>
+                <CloseIcon />
+              </IconButton>
+            )}
             <div id="modal-header-actions"></div>
           </Box>
         </DialogTitle>
@@ -518,7 +551,8 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
         open={editModalOpen}
         onClose={handleCloseEditModal}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
+        fullScreen={isMobile}
         PaperProps={{ className: 'custom-modal-paper' }}
         TransitionComponent={Transition}
         TransitionProps={{
@@ -533,6 +567,11 @@ const FloatingMenu = ({ onLogout, onToggleAssistant }) => {
         <DialogTitle className="modal-title">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="inherit">Editar {editButtonText?.replace('Editar ', '')}</Typography>
+            {isMobile && (
+              <IconButton onClick={handleCloseEditModal} size="small" sx={{ color: 'inherit' }}>
+                <CloseIcon />
+              </IconButton>
+            )}
             <div id="modal-header-actions-edit"></div>
           </Box>
         </DialogTitle>

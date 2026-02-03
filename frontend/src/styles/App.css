@@ -111,35 +111,11 @@
 }
 
 
-.status-notification-container {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-}
 
-
-
-
-
-
-
-
-/* Hover: mueve el gradiente hacia abajo */
-
-
-/* .bienvenida-link:hover {
-  background-color: rgba(0, 0, 0, 0.04);
-} */
 
 
 /* diseño para mobiles */
 @media (max-width: 768px) {
-
-
-  .css-uqxh04-MuiFormControl-root-MuiTextField-root {
-    /* barra de busqueda */
-    margin: 0 0 0 15px !important;
-  }
 
   .tarjeta-contenido {
     padding: 100px 10px 100px 10px !important;

@@ -277,8 +277,15 @@
 }
 
 @media (max-width: 600px) {
+    .employee-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 10px;
+    }
+
     .employee-card {
         flex-direction: column;
+        min-height: auto;
     }
 
     .employee-card::before {
@@ -299,7 +306,42 @@
         min-width: 120px;
     }
 
+    .employee-card-content {
+        padding: 10px 20px 25px 20px;
+        align-items: center;
+        text-align: center;
+    }
+
+    .employee-name {
+        margin-top: 10px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .employee-status-badge {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 10px;
+    }
+
     .employee-detail-grid {
         grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .employee-detail-row {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .employee-salary {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .sb-salary {
+        text-align: center;
+        margin: 10px 0;
     }
 }

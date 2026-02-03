@@ -17,6 +17,7 @@ const statsRoutes = require('./routes/statsRoutes');
 const detallesVentasRoutes = require('./routes/detallesVentasRoutes');
 const historialRoutes = require('./routes/historialRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const imagekitRoutes = require('./routes/imagekitRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -50,6 +51,7 @@ app.use('/stats', statsRoutes);
 app.use('/detalles-ventas', detallesVentasRoutes);
 app.use('/historial', historialRoutes);
 app.use('/ai', aiRoutes);
+app.use('/imagekit', imagekitRoutes);
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

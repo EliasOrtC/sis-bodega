@@ -11,3 +11,8 @@ const isLocal =
 export const API_BASE_URL = isLocal
     ? `${window.location.protocol}//${window.location.hostname}:5001`
     : 'https://vuestro-backend-en-render.onrender.com';
+
+// ImageKit Config (Reemplaza con tus datos de ImageKit.io)
+export const IK_URL_ENDPOINT = 'https://ik.imagekit.io/gpb4w57ui';
+export const IK_PUBLIC_KEY = 'public_5vlbX0Iex1X377i8OPzzwyR1pw4=';
+export const IK_AUTHENTICATION_ENDPOINT = `${API_BASE_URL}/imagekit/auth`;

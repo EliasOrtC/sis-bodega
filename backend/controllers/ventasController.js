@@ -33,7 +33,7 @@ exports.addVenta = async (req, res) => {
         const result = await db.execute('INSERT INTO Ventas (Id_Empleado, Id_Cliente, FechaRegistro, TotalVenta) VALUES (?, ?, ?, ?)', [id_empleado, id_cliente, fechaRegistro, totalVenta]);
         const ventaIdResult = await db.execute('SELECT last_insert_rowid() as id');
         const ventaId = ventaIdResult.rows[0][0];
-        await logAction(userId, username, 'Ventas', 'INSERT', `Venta agregada (ID ${ventaId}) por un total de ${totalVenta}`);
+        await logAction(userId, username, 'Ventas', 'INSERT', `(ID${ventaId}) Venta agregada por un total de ${totalVenta}`);
         scanner.notificarVentas();
         res.status(201).json({ message: 'Venta agregada correctamente', id_venta: ventaId });
     } catch (error) {
@@ -103,11 +103,11 @@ exports.updateVenta = async (req, res) => {
 
             // Construir descripción final
             if (nameChanges.length > 0 && diff !== 'Sin cambios detectados') {
-                description = `Venta actualizada (ID ${id}): ${nameChanges.join(', ')} | ${diff}`;
+                description = `(ID${id}) Venta actualizada: ${nameChanges.join(', ')} | ${diff}`;
             } else if (nameChanges.length > 0) {
-                description = `Venta actualizada (ID ${id}): ${nameChanges.join(', ')}`;
+                description = `(ID${id}) Venta actualizada: ${nameChanges.join(', ')}`;
             } else {
-                description = `Venta actualizada (ID ${id}): ${diff}`;
+                description = `(ID${id}) Venta actualizada: ${diff}`;
             }
 
             await logAction(userId, username, 'Ventas', 'UPDATE', description);
@@ -160,7 +160,7 @@ exports.addDetalleBatch = async (req, res) => {
         }
 
         const productList = productNames.length > 0 ? ` (${productNames.join(', ')})` : '';
-        await logAction(userId, username, 'DetallesDeVentas', 'INSERT', `${detalles.length} producto(s) agregado(s) a la venta ID ${id_venta}${productList}`);
+        await logAction(userId, username, 'DetallesDeVentas', 'INSERT', `${detalles.length} producto(s) agregado(s) a la venta ID${id_venta}${productList}`);
         scanner.notificarDetallesVentas();
         res.status(201).json({ message: 'Detalles de venta agregados correctamente' });
     } catch (error) {
@@ -245,19 +245,19 @@ exports.updateDetallesVenta = async (req, res) => {
         // Registro detallado en el historial
         if (productosAgregados.length > 0) {
             await logAction(userId, username, 'DetallesDeVentas', 'INSERT',
-                `${productosAgregados.length} agregado(s) a la venta ID ${id_venta}: ${productosAgregados.join(', ')}`);
+                `${productosAgregados.length} agregado(s) a la venta ID${id_venta}: ${productosAgregados.join(', ')}`);
         }
         if (productosActualizados.length > 0) {
             await logAction(userId, username, 'DetallesDeVentas', 'UPDATE',
-                `${productosActualizados.length} actualizado(s) en la venta ID ${id_venta}: ${productosActualizados.join(', ')}`);
+                `${productosActualizados.length} actualizado(s) en la venta ID${id_venta}: ${productosActualizados.join(', ')}`);
         }
         if (productosEliminados.length > 0) {
             await logAction(userId, username, 'DetallesDeVentas', 'DELETE',
-                `${productosEliminados.length} eliminado(s) de la venta ID ${id_venta}: ${productosEliminados.join(', ')}`);
+                `${productosEliminados.length} eliminado(s) de la venta ID${id_venta}: ${productosEliminados.join(', ')}`);
         }
 
         if (productosAgregados.length === 0 && productosActualizados.length === 0 && productosEliminados.length === 0) {
-            await logAction(userId, username, 'DetallesDeVentas', 'UPDATE', `Detalles de venta ID ${id_venta} sin cambios`);
+            await logAction(userId, username, 'DetallesDeVentas', 'UPDATE', `Detalles de venta ID${id_venta} sin cambios`);
         }
 
         scanner.notificarDetallesVentas();
@@ -291,7 +291,7 @@ exports.deleteDetallesVenta = async (req, res) => {
         await db.execute('DELETE FROM DetallesDeVentas WHERE Id_Venta = ?', [id_venta]);
 
         const productList = productNames.length > 0 ? ` (${productNames.join(', ')})` : '';
-        await logAction(userId, username, 'DetallesDeVentas', 'DELETE', `${count} producto(s) eliminado(s) de la venta ID ${id_venta}${productList}`);
+        await logAction(userId, username, 'DetallesDeVentas', 'DELETE', `${count} producto(s) eliminado(s) de la venta ID${id_venta}${productList}`);
         scanner.notificarDetallesVentas();
         res.json({ message: 'Detalles de venta eliminados correctamente' });
     } catch (error) {
